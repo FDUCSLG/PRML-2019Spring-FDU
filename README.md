@@ -41,12 +41,12 @@ The `handout/` directory contains the facilities provided for you to accomplish 
 
 The workflow of doing the coursework is like:
 
-1. You fork this repository, and clone your forked repository to your local workplace.
+1. You fork this repository, and clone your forked repository to your local workplace.  
   ```
   git clone git@github.com:your_username/PRML-Spring19-Fudan.git
   ```
 
-2. When new assignment is released, first pull the updates in the original repository in your local cloned workplace, and create a directory with your student id (or mask student id) under the assignment directory, and only work in your own directory so that you won't conflict with others.
+2. When new assignment is released, first pull the updates in the original repository in your local cloned workplace, and create a directory with your student id (or mask student id) under the assignment directory, and only work in your own directory so that you won't conflict with others.  
   ```
   # First, open a terminal and navigate to the root of your local repository. Then type:
   git pull git@github.com:ichn-hu/PRML-Spring19-Fudan.git
@@ -62,11 +62,11 @@ The workflow of doing the coursework is like:
   git add . # add your submission into git
   git commit -m "submission of assignment-1 of 16307130177" # identify your submission
   git push # push your local submission to your remote forked repository
-  ```
-  Once you've finished this, you need to open your browser to the page of your forked repository and create a pull request for your submission, we will update a simple tutorial with illustrations later.
-  **The time your create a pull request will be seen as the time you submit your coursework**, so make sure you do this before the due date.
+  ```  
+  Once you've finished this, you need to open your browser to the page of your forked repository and create a pull request for your submission, we will update a simple tutorial with illustrations later.  
+  **The time your create a pull request will be seen as the time you submit your coursework**, so make sure you do this before the due date.  
   As stated in the above section, you are welcomed to enhance the course material by another pull request, however, you **should not** mix these kind of commit with your coursework commit, because your enhancement pull request might be rejected, however we don't want to reject your coursework pull request, so please be extremely aware of this.
 
-4. In order to make the repository clean and easy for marking, you are only allowed to commit `*.py` and `report.pdf` files for your submission (take a look at the `.gitignore` file for details. You could organize your code with hiearchy files later when the coursework becomes more complicated, however you should make your main procedure in `source.py` file.
+4. In order to make the repository clean and easy for marking, you are only allowed to commit `*.py` and `report.pdf` files for your submission (take a look at the `.gitignore` file for details. You could organize your code with hiearchy files later when the coursework becomes more complicated, however you should make your main procedure in `source.py` file.  
   Note that you could use `jupyter notebook` for your exploration and experiment, however when you want to submit your coursework, please re-organize your code into plain python file. Also note that your report should be a `pdf` file and you have to make it as small as possible, since we have 30+ students and 4 assignments.
 

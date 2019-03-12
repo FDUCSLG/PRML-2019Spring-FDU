@@ -4,7 +4,7 @@
 
 <center>Assignment 1</center>
 
-Note: This is the first assignment for this course, you should read the guidelines and consent to the agreement before doing it.
+Note: This is the first assignment for this course, you should read the [guidelines](https://github.com/ichn-hu/PRML-Spring19-Fudan/blob/master/README.md) and consent to the agreement before doing it.
 
 This assignment will due on Wed 20 before the course start, for instructions of submission, please also see the guidelines.
 
