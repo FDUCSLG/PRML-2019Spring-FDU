@@ -10,9 +10,7 @@ import matplotlib.pyplot as plt
 #Nearest Neighbor Method
 #Different from Kernel Method, we choose to fix K and varies V, and simply uses the function:
 #p(x)=K/(V*N)
-K=100
-num=20000 #the length of the target
-def KNN_Pro(target,dataset_ordered,N):
+def KNN_Pro(target,dataset_ordered,N,K):
     flag_data=0
     while flag_data<N and dataset_ordered[flag_data]<=target:
         # print(flag_data)
@@ -45,7 +43,7 @@ def KNN(num,N,K):
     sampled_data.sort()
     output=[]
     for x in np.linspace(20,40,num):
-        output.append(KNN_Pro(x,sampled_data,N))
+        output.append(KNN_Pro(x,sampled_data,N,K))
     plt.plot(np.linspace(20,40,num),output)
     plt.show()
 
