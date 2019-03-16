@@ -21,9 +21,9 @@ Delta=0.08
 # plt.hist(sampled_data, normed=True, bins=50)
 # plt.show()
 
-def Hist(N,Delta):
+def Hist(N,bins_in):
     sampled_data = get_data(N)
-    plt.hist(sampled_data, normed=True, bins=50)
+    plt.hist(sampled_data, normed=True, bins=bins_in)
     plt.show()
 
-Hist(10000,0.08)
+#Hist(10000,0.08)

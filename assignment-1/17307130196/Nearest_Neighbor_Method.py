@@ -40,7 +40,7 @@ def KNN_Pro(target,dataset_ordered,N):
     # return  V#get the volume of the box
     return float(K)/(float(V)*N)
 
-def KNN(N,num,K):
+def KNN(num,N,K):
     sampled_data = get_data(N)
     sampled_data.sort()
     output=[]
@@ -49,4 +49,4 @@ def KNN(N,num,K):
     plt.plot(np.linspace(20,40,num),output)
     plt.show()
 
-KNN(10000,10000,50)
+#KNN(10000,10000,50)

@@ -42,4 +42,4 @@ def Kernel(num,N,h):
     plt.plot(np.linspace(20,40,num),output_data)
     plt.show()
 
-Kernel(5000,10000,0.08)
+# Kernel(5000,10000,0.08)
