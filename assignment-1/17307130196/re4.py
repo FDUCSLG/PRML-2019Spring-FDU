@@ -21,6 +21,6 @@ Nearest_Neighbor_Method.KNN(1000,500,36)
 gm1d = GaussianMixture1D(mode_range=(0, 50))
 sampled_data = gm1d.sample([10000])
 Kernel_Method.Kernel(1000,200,0.4)
-gm1d.plot(200)
+# gm1d.plot(200)
 
 plt.show()

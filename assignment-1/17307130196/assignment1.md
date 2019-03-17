@@ -174,7 +174,7 @@ At the beginning, we assume the width of bins to be the same, which is unnecessa
 
 ## Requirement Three
 
-In this section, the influences of *h* on KDE will be discussed. **How *h* changes the result and how to pick out a proper *h*** will be the main goals.
+In this section, the influences of *h* on KDE will be discussed. **How *h* changes the result and how to pick out a proper *h*** will be the main goals. Since the validation is included when we give out the formular, we will not have more discussions on that. 
 
 ### Some Basic Considerations
 
@@ -216,7 +216,7 @@ As data and prediction matches, I will hold some of the ideas presented in *Some
 
 **So how to pick one?** As we can see from the Table above, the quality of the figure produced by KDE is grows as *h* grows and begins to drop after a certain point. But the disappearance of spikes and the merge of peaks is actually the same process, making the judge difficult. 
 
-Recall the way we use in parametric algorithms. We introduce the methods of minimizing the bias and maximizing the likelihood. And we could have the same kind of methods here. To do so, we introduce  **least-squares cross-validation** [^1] here, thus to minimize:
+Recall the way we use in parametric algorithms. We introduce the methods of minimizing the bias and maximizing the likelihood. And we could have the same kind of methods here. We could use methods like mean integrated squared error or something else. We introduce  **least-squares cross-validation** [^1] here, thus to minimize:
 
 [^1]: https://www.stat.berkeley.edu/~stark/Teach/S240/Notes/ch10.pdf,
 
@@ -230,7 +230,9 @@ $$ M_0 = \int \hat{f}^2_hdx-\frac{2}{n}\sum_i\hat{f}_{h,(i)}(X_i) $$
 
 *FIGURE_HERE*
 
-So we choose *h* as 0.4 to get the best estimation.  
+So we choose *h* as 0.4 to get the best estimation.
+
+Also, besides the choice of *h*, the **choice of kernels** matters, too. Since I do not have much knowledge of the kernels other than Gaussian, I will just skip this section. But because Gaussian kernel is a normal method in most probability-relative questions, the choice will not be that bad.  
 
 ## Requirement Four
 
@@ -246,7 +248,7 @@ $$ p(x)=\frac{K}{NV} $$
 
 So it's possible to explain the disappearance of the peaks.  Remember we fix our *K* to be 20, and the number of sample in *Figure 11* is 100. Therefore, the estimation requires more than 20 points to make a change. And now pay attention to the 30-40 region in Figure 11. In the Figures we get from Histogram Methods, we know there is a peak but it's much lower than the only peak in Figure 11. Place like 35, for example is not close to the area of the peak, so to get a box with *K* data, it has to reach from 35 to 40 and 35 to 30 which is actually a really large scale. All the other points like 38 or 39 has the same problem of point 35, so the peak here is displaced by a long platform. And once the number in second peak is large enough to full-fill a *K* box, the peak appears again. That's how the number of data influences the figures.
 
-### Using Different *K*
+### Using Different *K* and How to Pick One
 
 The number of data: 200.
 
@@ -256,4 +258,14 @@ We here choose *K=3~48* but find no suitable choice at all. Therefore, we presen
 
 *FIGURES HERE*
 
-We find that the number of spikes decreases as *K* increases. And one thing important is that there produce a high platform in the bigger side which is not the true distribution. 
+We find that the number of spikes decreases as *K* increases. And one thing important is that there produce a high platform in the bigger side which is not the true distribution. On observations above, we prefer a smaller *K*, in order to prevent from losing too much information. 
+
+And as discussed in KDE, we could use some basic methods like minimizing the error. For convenience, we will still choose  *least-squares cross-validation* to get the best *K* here. According to the figure, 10 would be the best choice when consider a dataset with 500 data. And when we consider a larger dataset, such as 1000 data, we get another best *K*. So the best *K* grows as the growth of number of dataset. And unsurprisingly, the choice of *K* has a linear relationship with *N*, or say 2% of  *N*.
+
+### Invalid Distribution
+
+The conclusion of the invalidation would be easy to figure out theoretically. Consider *K* to be a large number, for example, the number of dataset, and $V_0$ is smallest space *S*, including all the data. Then for a test point in *S*, the *V* in the formular always asks for the $ V_0 $ in the test. That is $ V_0 $, *K* and *N* are all fixed. With *K=N*,  $p(x)=1/V_0$. So $\int_V p(x) dx=1$ in this situation, but there are space out of *S*, making $\int p(x) dx\neq 1$. So it's not always valid.
+
+For another example, fix N=3 and K=2 in a 1D situation. And we named the three data from small to big as $ d_0,d_1,d_2 $. So test point between $d_0$ and $d_1$ has probability estimation as $\frac{2}{3×(d_1-d_0)}$. So $\int^{d_1}_{d_0}p(x)dx=\frac{2}{3×(d_1-d_0)}×(d_1-d_0)=\frac{2}{3}$. So $ \int^{d_2}_{d_0}p(x)dx=\frac{4}{3}>1 $. So it's invalid, too. 
+
+In fact, the formular of k-NN isn't connected to the definition of probability, but closely connected to density. 

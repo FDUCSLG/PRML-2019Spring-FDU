@@ -12,9 +12,11 @@ import matplotlib.pyplot as plt
 #p(x)=K/(V*N)
 def KNN_Pro(target,dataset_ordered,N,K):
     flag_data=0
+    # print(N)
+    # print(len(dataset_ordered))
     while flag_data<N and dataset_ordered[flag_data]<=target:
-        # print(flag_data)
         flag_data=flag_data+1
+        # print(flag_data)
         #In this way, we get the first point larger than x
         # and the flag_data marks the first number larger than target
     ct=0 #ct marks the number of numbers met
@@ -36,6 +38,7 @@ def KNN_Pro(target,dataset_ordered,N,K):
     # print(flag_r)
     V=dataset_ordered[flag_r]-dataset_ordered[flag_l]
     # return  V#get the volume of the box
+    # print(V)
     return float(K)/(float(V)*N)
 
 def KNN(num,N,K):

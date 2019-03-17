@@ -49,6 +49,6 @@ def get_data(num_data:int = 100) -> List[float]:
     larger than 10000
     """
     assert num_data <= 10000
-    # plt.hist(sampled_data[:num_data],normed=True,bins=50)
+    # plt.hist(sampled_data,normed=True,bins=50)
     return list(sampled_data[:num_data])
 # gm1d.plot(num_sample=1000)

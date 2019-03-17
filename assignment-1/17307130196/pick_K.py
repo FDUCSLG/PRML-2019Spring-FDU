@@ -1,4 +1,4 @@
-import M_KDE
+import M_NNM
 import math as mt
 #Set the Delta as 0.08 at first
 import os
@@ -8,8 +8,8 @@ from handout import get_data
 import numpy as np
 import matplotlib.pyplot as plt
 ans=[]
-for i in range(1,20):
-    ans.append(M_KDE.M_0(i*0.05))
+for i in range(2,50):
+    ans.append(M_NNM.M_0(i))
 
-plt.plot([i*0.5 for i in range(1,20)],ans)
+plt.plot(range(2,50),ans)
 plt.show()
