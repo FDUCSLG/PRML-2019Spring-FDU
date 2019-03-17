@@ -42,11 +42,13 @@ gm1d = GaussianMixture1D(mode_range=(0, 50))
 sampled_data = gm1d.sample([10000])
 
 def get_data(num_data:int = 100) -> List[float]:
+# def get_data(num_data=100) -> List[float]:
     """
     Please use this function to access the given distribution, you should provide an int
     `num_data` to indicate how many samples you want, note that num_data must be no
     larger than 10000
     """
     assert num_data <= 10000
+    # plt.hist(sampled_data,normed=True,bins=50)
     return list(sampled_data[:num_data])
 # gm1d.plot(num_sample=1000)
