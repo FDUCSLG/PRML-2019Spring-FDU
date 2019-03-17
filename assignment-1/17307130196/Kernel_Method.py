@@ -37,9 +37,10 @@ def Kernel(num,N,h):
     # for x in np.linspace(0,1-h,h):
     #     print(1)
     #     output_data.append(KernelGaussian(x,sampled_data))
-    for x in np.linspace(20,40,num):
+    for x in np.linspace(0,50,num):
         output_data.append(KernelGaussian(x,sampled_data,h_2,para))
-    plt.plot(np.linspace(20,40,num),output_data)
-    plt.show()
+    plt.plot(np.linspace(0,50,num),output_data)
+    # return output_data
+    # plt.show()
 
 # Kernel(5000,10000,0.08)

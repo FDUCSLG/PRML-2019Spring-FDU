@@ -6,12 +6,12 @@ In this assignment, four requirements are listed below:
 
 - What will happen when we varies the number of data used?
 - How the number of bins of Histogram affects the estimation?
-- Try different *h* for Kernel Method
-- Vary *K* in Nearest Neighbor Method
+- Try different *h* for Kernel Density Estimate (KDE)
+- Vary *K* in Nearest Neighbor Method (k-NN) 
 
-  And they will be solved case by case. But before that, I will give a brief *summery* of the details I will discuss in this paper. And after that, fake codes for the Kernel Method and NNM will be presented. (As the function of Histogram Method is provided by `matplotlib`, I will not show it here.)
+  And they will be solved case by case. But before that, I will give a brief *summery* of the details I will discuss in this paper. And after that, fake codes for the Kernel Density Estimate and k-NN will be presented. (As the function of Histogram Method is provided by `matplotlib`, I will not show it here.)
 
-**Method Used**: Histogram Method, Kernel Method and the Nearest Neighbor Method
+**Method Used**: Histogram Method, Kernel Density Estimate and the k-Nearest Neighbor Method
 
 **Goal**: Estimate the distribution of a given dataset. And try to figure out how the parameters of these methods affects the result.
 
@@ -38,7 +38,7 @@ In this assignment, four requirements are listed below:
 
 ## Formulars and Fake Code
 
-### Kernel Method
+### Kernel Density Estimate
 
 $$ p(x)=\frac{1}{N}*\sum_{n=1}^{N}\frac{1}{(2\pi h^2)^{1/2}}exp\{ -\frac{||x-x_n||^2}{2h^2}\} $$
 
@@ -95,8 +95,8 @@ For convenience, parameters here are set to be the same except for number of dat
 | parameters | nums |
 | ---------- | ---- |
 | *h* (Ker) | 0.08 |
-| *K* (NNM) | 20 |
-| *num* (Ker,NNM) | 1000 |
+| *K* (k-NN) | 20 |
+| *num* (Ker,k-NN) | 1000 |
 |*bins* (Hist)|50|
 
 And we use 100, 500, 1000, 10000 as suggested to start our explorations, but I will not present all the result here. Instead, I will show some interesting comparisons, and all the other results will be collected in the attachment.
@@ -115,7 +115,7 @@ It's obvious that the vacant bin in Figure 2 is much less than that in the Figur
 
 ---
 
-**Kernel Method.** This seems much interesting than the Histogram Method. In this test, I happen to choose 0.8 as the every beginning test, where every curve of the test (100, 500, 1000, 10000 samples) looks actually the same and smooth *See Figure 3(100)and 4(10000)*. So in order to get the influence of the test number, we consider the *h* to be 0.08 or less. After that, we get clear different figures. *The variation of h will be discussed in Requirement Three.* *Figure 5-8* 
+**Kernel Density Estimate.** This seems much interesting than the Histogram Method. In this test, I happen to choose 0.8 as the every beginning test, where every curve of the test (100, 500, 1000, 10000 samples) looks actually the same and smooth *See Figure 3(100)and 4(10000)*. So in order to get the influence of the test number, we consider the *h* to be 0.08 or less. After that, we get clear different figures. *The variation of h will be discussed in Requirement Three.* *Figure 5-8* 
 
 _FIGURES HERE_
 
@@ -125,7 +125,7 @@ Clearly, the increase of data smooths the curve. Estimation value will not have 
 
 ---
 
-**Nearest Neighbor Method.** *Figure 11-14*. This shows great differences comparing to the others. The change of number of data changes the shape of the curve rather than its smoothness. 
+**k-Nearest Neighbor Method.** *Figure 11-14*. This shows great differences comparing to the others. The change of number of data changes the shape of the curve rather than its smoothness. 
 
 *FIGURES HERE*
 
@@ -174,13 +174,13 @@ At the beginning, we assume the width of bins to be the same, which is unnecessa
 
 ## Requirement Three
 
-In this section, the influences of *h* on Kernel Method will be discussed. **How *h* changes the result and how to pick out a proper *h*** will be the main goals.
+In this section, the influences of *h* on KDE will be discussed. **How *h* changes the result and how to pick out a proper *h*** will be the main goals.
 
 ### Some Basic Considerations
 
-When considering a Kernel Method with non-Gaussian kernel, it's easy to figure out how *h* influences the result. A larger *h* allows more data influences the estimation of a single point, causing it show more global features around the point. Therefore, a larger *h* will make it smoother. On the opposite, a smaller *h* shows more local information, and is sharper. 
+When considering KDE with non-Gaussian kernel, it's easy to figure out how *h* influences the result. A larger *h* allows more data influences the estimation of a single point, causing it show more global features around the point. Therefore, a larger *h* will make it smoother. On the opposite, a smaller *h* shows more local information, and is sharper. 
 
-The situation in the Gaussian kernel is the same. *h* in Gaussian kernel controls the weights of influences that every points put on the test point. A larger *h* makes the weights of a further data decays slower, and has a more global feature as the non-Gaussian situation. So the conclusions of non-Gaussian kernel method holds in Gaussian kernel method. Under this consideration, the variance may have little influence on the change of the curve's basic shape, but has great influences on the smoothness. 
+The situation in the Gaussian kernel is the same. *h* in Gaussian kernel controls the weights of influences that every points put on the test point. A larger *h* makes the weights of a further data decays slower, and has a more global feature as the non-Gaussian situation. So the conclusions of non-Gaussian KDE holds in Gaussian KDE. Under this consideration, the variance may have little influence on the change of the curve's basic shape, but has great influences on the smoothness. 
 
 ### Using Different *h*
 
@@ -192,7 +192,7 @@ We tested different *h* and different *N*. We score the result from 0 (poor) to 
 | 0.08    | 0    | 1    | 3    | 4     |
 | 0.8     | 5    | 5    | 5    | 5     |
 
-So basically, the result matches the prediction. And more interestingly, the smoothness can be clearly recognized as pikes. In 0.01, no mater how many data used, the pikes remain sharp. But in 0.8 situation, there is no pikes at all. For further exploration, we fix the *N* here as 100, and see what happens when we have different  *h*. 
+So basically, the result matches the prediction. And more interestingly, the smoothness can be clearly recognized as spikes. In 0.01, no mater how many data used, the spikes remain sharp. But in 0.8 situation, there is no spikes at all. For further exploration, we fix the *N* here as 100, and see what happens when we have different  *h*. 
 
 According to Table 3, when consider *N=100*, a suitable *h* lies between 0.08 to 0.8. 
 
@@ -214,11 +214,23 @@ As data and prediction matches, I will hold some of the ideas presented in *Some
 
 **Why sharp?** Consider a test point quite near a data, or almost the same. Then when count the sum of Gaussian kernel, the data will have heavy influences on the computing, while for another test point a little farther than the data, the influence will be much less. **Why the change of *h* solve the problem?** For a certain test point, the influences are totally decided by *h*. When *h* is small, the influences of the other data decay dramatically as the distance grows. However, when *h* is larger, the influences of farther data increase, preventing sharp changes of the value.
 
-**So how to pick one?** 
+**So how to pick one?** As we can see from the Table above, the quality of the figure produced by KDE is grows as *h* grows and begins to drop after a certain point. But the disappearance of spikes and the merge of peaks is actually the same process, making the judge difficult. 
 
-### Some More Thoughts
+Recall the way we use in parametric algorithms. We introduce the methods of minimizing the bias and maximizing the likelihood. And we could have the same kind of methods here. To do so, we introduce  **least-squares cross-validation** [^1] here, thus to minimize:
 
-**How to pick the number of test points?** We can get an estimation at any place in the region, and it's unnecessary to fix the test points as the sample data. We can get much more test points than *N*, but does that work? 
+[^1]: https://www.stat.berkeley.edu/~stark/Teach/S240/Notes/ch10.pdf,
+
+$$ \int (\hat{f}-f)^2dx=\int\hat{f}^2dx-2\int\hat{f}fdx+\int f^2 dx $$
+
+And by applying cross-validation, we introduce a new estimator:
+
+$$ M_0 = \int \hat{f}^2_hdx-\frac{2}{n}\sum_i\hat{f}_{h,(i)}(X_i) $$
+
+*X* is the observed dataset, while $\hat{f}_{h,(i)}$ means to use dataset without $X_i$. And by minimizing $M_0$, we reduce the influences of single data. As the computation would be rather complex,so I will just pick out some number to compute $M_0$. And we get the following figure:
+
+*FIGURE_HERE*
+
+So we choose *h* as 0.4 to get the best estimation.  
 
 ## Requirement Four
 
@@ -226,10 +238,22 @@ As data and prediction matches, I will hold some of the ideas presented in *Some
 
 Before changing the value of *K*, I's like to spend some time explaining the phenomenon mentioned in Requirement One.
 
-Consider the formular of NNM. 
+Consider the formular of k-NN. 
 
 $$ p(x)=\frac{K}{NV} $$
 
 *K* is fixed here. So the change of *N* and *V* influences the estimation directly. As *N* increases, *V* is decreased. So the explanation is not that clear. We start by considering the appearance of platforms. Note that the change of *N* applies to all the test point, so that change of *V* decides the relatively probability density. We start by with K to be two for convenience. Therefore, any test point lay in two sample data has the same probability, thus a platform is produces. With the increase of sample data, the platforms become shorter and shorter. And under this consideration, the place with high probability is also placed more sample data, making it nearly impossible to produce any platform in these areas. On the other hand, region with less data is more possible to produce a longer platform, as pictured in *Figure 11*. Then we can consider a larger *K*. Situation will be similar. Test points lay in sparse area do not its estimation, for the number of *K* requires a large region to be included, and this will not change until a great density area appears.
 
 So it's possible to explain the disappearance of the peaks.  Remember we fix our *K* to be 20, and the number of sample in *Figure 11* is 100. Therefore, the estimation requires more than 20 points to make a change. And now pay attention to the 30-40 region in Figure 11. In the Figures we get from Histogram Methods, we know there is a peak but it's much lower than the only peak in Figure 11. Place like 35, for example is not close to the area of the peak, so to get a box with *K* data, it has to reach from 35 to 40 and 35 to 30 which is actually a really large scale. All the other points like 38 or 39 has the same problem of point 35, so the peak here is displaced by a long platform. And once the number in second peak is large enough to full-fill a *K* box, the peak appears again. That's how the number of data influences the figures.
+
+### Using Different *K*
+
+The number of data: 200.
+
+In the last section, although we do not focus on the topic that how *K* changes the result, we do have some basic predictions there. A smaller *K* has a figure with less platforms and looks more natural. 
+
+We here choose *K=3~48* but find no suitable choice at all. Therefore, we present a basic assumption: k-NN is not suitable for a problem with few dataset. So we choose the number of data to be 500 for further explorations. 
+
+*FIGURES HERE*
+
+We find that the number of spikes decreases as *K* increases. And one thing important is that there produce a high platform in the bigger side which is not the true distribution. 

@@ -44,7 +44,8 @@ def KNN(num,N,K):
     output=[]
     for x in np.linspace(20,40,num):
         output.append(KNN_Pro(x,sampled_data,N,K))
-    plt.plot(np.linspace(20,40,num),output)
-    plt.show()
+    # plt.plot(np.linspace(20,40,num),output)
+    # return output
+    # plt.show()
 
 #KNN(10000,10000,50)
