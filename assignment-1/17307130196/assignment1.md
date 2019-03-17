@@ -269,3 +269,19 @@ The conclusion of the invalidation would be easy to figure out theoretically. Co
 For another example, fix N=3 and K=2 in a 1D situation. And we named the three data from small to big as $ d_0,d_1,d_2 $. So test point between $d_0$ and $d_1$ has probability estimation as $\frac{2}{3×(d_1-d_0)}$. So $\int^{d_1}_{d_0}p(x)dx=\frac{2}{3×(d_1-d_0)}×(d_1-d_0)=\frac{2}{3}$. So $ \int^{d_2}_{d_0}p(x)dx=\frac{4}{3}>1 $. So it's invalid, too. 
 
 In fact, the formular of k-NN isn't connected to the definition of probability, but closely connected to density. 
+
+## Conclusions
+
+In this paper, we simply discuss the parameters' influences over Histogram Method, KDE and k-NN on probability density estimation. We have discussed the influences caused by variance of the number of data, and choice of *bins*, *h*, *K* case by case. In general, as the database grows, the result is always better. But for other parameters, they have specific optimal according to *N*. They will have bad performances when they are too small or too big. And we have used *least-squares cross-validation* method to pick a nice parameter and confirmed our predictions in some way. Some other little considerations and works all have detailed discussions in the body of this paper. 
+
+## Attachments
+
+Attachments mainly include figures produced in the exploring process. Some of them have already presented in this paper. Please help yourself if you are interested in them. The name of each folder implies its aim, and I hope they are clear enough.
+
+## References
+
+Christopher M.Bishop, *Recognizing and Machine Learning*.
+
+Jinmi Kim, Choongrak Kim, 2013, *Reducing the mean squared error in kernel density estimation*. Journal of the Korean Statistical Society, 387-397
+
+Statistic 240 Lecture Notes: www.stat.berkeley.edu/∼stark/index.html
