@@ -6,6 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-sampled_data = get_data(500)
+sampled_data = get_data(200)
 plt.hist(sampled_data, normed=True, bins=50)
 plt.show()
