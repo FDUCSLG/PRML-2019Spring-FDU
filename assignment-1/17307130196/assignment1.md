@@ -109,25 +109,54 @@ The change of numbers of the data has different degrees of influences on these t
 
 **Histogram Method.** So we'd look at the first two pictures produced by it. *Figure 1(With N as 100) & Figure 2(With N as 500)*. 
 
-_PICTURES HERE_
+<div align="center" >
+<img src="Pics/re1/basic_information/his/100.png" style="zoom:10%"/>
+<img src="Pics/re1/basic_information/his/500.png" style="zoom:10%" />
+</div>
+
+<div align="center">
+    Figure 1, 2
+</div>
+
+
+
 
 It's obvious that the vacant bin in Figure 2 is much less than that in the Figure 1. Besides, it shows more regular shapes instead of numbers of spikes in Figure 1. It would be clear that how the number of data affects Histogram Method. To begin with, the increase of numbers decreases the number of vacant bins, since more points raise the probability for a bin to have at least one points naturally. And a larger number of data improves the situation that a position with high probability gets few samples in the test.
 
 ---
 
-**Kernel Density Estimate.** This seems much interesting than the Histogram Method. In this test, I happen to choose 0.8 as the every beginning test, where every curve of the test (100, 500, 1000, 10000 samples) looks actually the same and smooth *See Figure 3(100)and 4(10000)*. So in order to get the influence of the test number, we consider the *h* to be 0.08 or less. After that, we get clear different figures. *The variation of h will be discussed in Requirement Three.* *Figure 5-8* 
+**Kernel Density Estimate.** This seems much interesting than the Histogram Method. In this test, I happen to choose 0.8 as the every beginning test, where every curve of the test (100, 500, 1000, 10000 samples) looks actually the same and smooth *See Figure 3(100)and 4(10000)*. So in order to get the influence of the test number, we consider the *h* to be 0.08 or less. After that, we get clear different figures. *The variation of h will be discussed in Requirement Three.* 
 
-_FIGURES HERE_
+<div align="center" >
+<img src="Pics/re1/basic_information/ker/0.8/100.png" style="zoom:10%"/>
+<img src="Pics/re1/basic_information/ker/0.8/10000.png" style="zoom:10%" />
+</div>
+<div align="center">
+    Figure 3, 4(h=0.8)
+</div>
 
-Clearly, the increase of data smooths the curve. Estimation value will not have a sudden raise in 10000 dataset as a 100 one. And with *h* to be 0.01, the difference is more recognizable. *Figure 9,10*. The difference in number of data just have the same function in the Histogram Method, and there is nothing more to discuss here.
+<div align="center" >
+<img src="Pics/re1/basic_information/ker/0.08/100.png" style="zoom:10%"/>
+<img src="Pics/re1/basic_information/ker/0.08/10000.png" style="zoom:10%" />
+</div>
+<div align="center">
+    Figure 5, 6(h=0.08)
+</div>
 
-*FIGURES HERE*
+Clearly, the increase of data smooths the curve. Estimation value will not have a sudden raise in 10000 dataset as a 100 one. And with *h* to be 0.01, the difference is more recognizable. The difference in number of data just have the same function in the Histogram Method, and there is nothing more to discuss here.
 
 ---
 
-**k-Nearest Neighbor Method.** *Figure 11-14*. This shows great differences comparing to the others. The change of number of data changes the shape of the curve rather than its smoothness. 
+**k-Nearest Neighbor Method.** This shows great differences comparing to the others. The change of number of data changes the shape of the curve rather than its smoothness. 
 
-*FIGURES HERE*
+<div align="center" >
+<img src="Pics/re1/basic_information/nnm/100.png" style="zoom:10%"/><img src="Pics/re1/basic_information/nnm/500.png" style="zoom:10%" />
+<img src="Pics/re1/basic_information/nnm/1000.png" style="zoom:10%"/><img src="Pics/re1/basic_information/nnm/10000.png" style="zoom:10%"/>
+</div>
+
+<div align="center">
+    Figure 7
+</div>
 
 The most evident differences here is that in the Figure 11, only one peak is showed, while in Figure 12 there are two. And finally, in Figure 13, three peaks are recorded. Beside that, the number of platforms decrease. As the influences is totally different, the appearance of the curves require another explanation. And it's clearly connected to the value of *K*, so a furhur discuss will be put in Requirement Four.
 
@@ -139,11 +168,21 @@ We consider the variance of *bins* here. First of all, the choice of the number 
 
 ### Using different bins
 
-To check the consideration above, it's necessary to have figures vary both in *bins* and *N*. Therefore, we need mountains of figures. We will give some of the figure here and put the rest in the attachment. 
+To check the consideration above, it's necessary to have figures vary both in *bins* and *N*. Therefore, we need mountains of figures. We will give some of the figure here and put the rest in the attachment. Figures below are in order: 50,200;50,1000;150,200;150,1000.
 
 ***bins* tested**: 50, 100, 150, 200
 
 **N tested**: 200, 500, 1000, 5000, 10000
+
+<div align="center" >
+<img src="Pics/re1/variation_of_bins/50/50_200.png" style="zoom:10%"/>
+<img src="Pics/re1/variation_of_bins/50/50_1000.png" style="zoom:10%" />
+<img src="Pics/re1/variation_of_bins/150/150_200.png" style="zoom:10%" />
+<img src="Pics/re1/variation_of_bins/150/150_1000.png" style="zoom:10%" />
+</div>
+<div align="center">
+    Figure 8
+</div>
 
 | Table 1 | 50   | 100  | 150  | 200  |
 | ------- | ---- | ---- | ---- | ---- |
@@ -153,7 +192,17 @@ To check the consideration above, it's necessary to have figures vary both in *b
 | 5000    | 4    | 4    | 3    | 3    |
 | 10000   | 5    | 5    | 4    | 4    |
 
-The table above describes judges the quality of the figure output with 0 represents poor and 5 represents nice. For better comprehension, I fix *N* as 200 and find a nice number of *bins*.
+The table above describes judges the quality of the figure output with 0 represents poor and 5 represents nice. For better comprehension, I fix *N* as 200 and find a nice number of *bins*. *Figure 9* below are in order: 5, 15, 40, 80.
+
+<div align="center" >
+<img src="Pics/re1/variation_of_bins/FIXED200/200_5.png" style="zoom:10%"/>
+<img src="Pics/re1/variation_of_bins/FIXED200/200_15.png" style="zoom:10%" />
+<img src="Pics/re1/variation_of_bins/FIXED200/200_40.png" style="zoom:10%" />
+<img src="Pics/re1/variation_of_bins/FIXED200/200_80.png" style="zoom:10%" />
+</div>
+<div align="center">
+    Figure 9
+</div>
 
 | Table 2 | 5    | 10   | 15   | 20   | 40   | 60   | 80   |
 | ------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
@@ -184,7 +233,19 @@ The situation in the Gaussian kernel is the same. *h* in Gaussian kernel control
 
 ### Using Different *h*
 
-We tested different *h* and different *N*. We score the result from 0 (poor) to 5 (nice), marking the smoothness.
+We tested different *h* and different *N*. We score the result from 0 (poor) to 5 (nice), marking the smoothness. *Figure 10* are in order: 0.1, 0.275, 0.6, 0.8
+
+<div align="center" >
+<img src="Pics/re2/0.1.png" style="zoom:10%"/>
+<img src="Pics/re2/0.275.png" style="zoom:10%" />
+<img src="Pics/re2/0.6.png" style="zoom:10%" />
+<img src="Pics/re2/0.8.png" style="zoom:10%" />
+</div>
+<div align="center">
+    Figure 10
+</div>
+
+
 
 | Table 3 | 100  | 500  | 1000 | 10000 |
 | ------- | ---- | ---- | ---- | ----- |
@@ -228,7 +289,17 @@ $$ M_0 = \int \hat{f}^2_hdx-\frac{2}{n}\sum_i\hat{f}_{h,(i)}(X_i) $$
 
 *X* is the observed dataset, while $\hat{f}_{h,(i)}$ means to use dataset without $X_i$. And by minimizing $M_0$, we reduce the influences of single data. As the computation would be rather complex,so I will just pick out some number to compute $M_0$. And we get the following figure:
 
-*FIGURE_HERE*
+<div align="center" >
+    <img src="Pics/re3/pick-h.png" style="zoom:20%"/></div>
+<div align="center">
+    Figure 11: M0's change with h
+</div>
+
+<div align="center" >
+    <img src="Pics/re3/the-best-figure-under-100.png" style="zoom:20%"/></div>
+<div align="center">
+    Figure 12: The best figure
+</div>
 
 So we choose *h* as 0.4 to get the best estimation.
 
@@ -244,9 +315,16 @@ Consider the formular of k-NN.
 
 $$ p(x)=\frac{K}{NV} $$
 
-*K* is fixed here. So the change of *N* and *V* influences the estimation directly. As *N* increases, *V* is decreased. So the explanation is not that clear. We start by considering the appearance of platforms. Note that the change of *N* applies to all the test point, so that change of *V* decides the relatively probability density. We start by with K to be two for convenience. Therefore, any test point lay in two sample data has the same probability, thus a platform is produces. With the increase of sample data, the platforms become shorter and shorter. And under this consideration, the place with high probability is also placed more sample data, making it nearly impossible to produce any platform in these areas. On the other hand, region with less data is more possible to produce a longer platform, as pictured in *Figure 11*. Then we can consider a larger *K*. Situation will be similar. Test points lay in sparse area do not its estimation, for the number of *K* requires a large region to be included, and this will not change until a great density area appears.
+*K* is fixed here. So the change of *N* and *V* influences the estimation directly. As *N* increases, *V* is decreased. So the explanation is not that clear. We start by considering the appearance of platforms. Note that the change of *N* applies to all the test point, so that change of *V* decides the relatively probability density. We start by with K to be two for convenience. Therefore, any test point lay in two sample data has the same probability, thus a platform is produces. With the increase of sample data, the platforms become shorter and shorter. And under this consideration, the place with high probability is also placed more sample data, making it nearly impossible to produce any platform in these areas. On the other hand, region with less data is more possible to produce a longer platform, as pictured in *Figure 13-1*. Then we can consider a larger *K*. Situation will be similar. Test points lay in sparse area do not its estimation, for the number of *K* requires a large region to be included, and this will not change until a great density area appears. *Figure 13* are in order: 100, 500, 1000, 10000 number of data
 
-So it's possible to explain the disappearance of the peaks.  Remember we fix our *K* to be 20, and the number of sample in *Figure 11* is 100. Therefore, the estimation requires more than 20 points to make a change. And now pay attention to the 30-40 region in Figure 11. In the Figures we get from Histogram Methods, we know there is a peak but it's much lower than the only peak in Figure 11. Place like 35, for example is not close to the area of the peak, so to get a box with *K* data, it has to reach from 35 to 40 and 35 to 30 which is actually a really large scale. All the other points like 38 or 39 has the same problem of point 35, so the peak here is displaced by a long platform. And once the number in second peak is large enough to full-fill a *K* box, the peak appears again. That's how the number of data influences the figures.
+<div align="center" >
+    <img src="Pics/re4/nnm/100.png" style="zoom:10%"/><img src="Pics/re4/nnm/500.png" style="zoom:10%"/>
+<img src="Pics/re4/nnm/1000.png" style="zoom:10%"/><img src="Pics/re4/nnm/10000.png" style="zoom:10%"/></div>
+<div align="center">
+    Figure 13
+</div>
+
+So it's possible to explain the disappearance of the peaks.  Remember we fix our *K* to be 20, and the number of sample in *Figure 13-1* is 100. Therefore, the estimation requires more than 20 points to make a change. And now pay attention to the 30-40 region in *Figure 13-1*. In the Figures we get from Histogram Methods, we know there is a peak but it's much lower than the only peak in *Figure 13-1*. Place like 35, for example is not close to the area of the peak, so to get a box with *K* data, it has to reach from 35 to 40 and 35 to 30 which is actually a really large scale. All the other points like 38 or 39 has the same problem of point 35, so the peak here is displaced by a long platform. And once the number in second peak is large enough to full-fill a *K* box, the peak appears again. That's how the number of data influences the figures.
 
 ### Using Different *K* and How to Pick One
 
@@ -254,11 +332,24 @@ The number of data: 200.
 
 In the last section, although we do not focus on the topic that how *K* changes the result, we do have some basic predictions there. A smaller *K* has a figure with less platforms and looks more natural. 
 
-We here choose *K=3~48* but find no suitable choice at all. Therefore, we present a basic assumption: k-NN is not suitable for a problem with few dataset. So we choose the number of data to be 500 for further explorations. 
+We here choose *K=3~48* but find no suitable choice at all. Therefore, we present a basic assumption: k-NN is not suitable for a problem with few dataset. So we choose the number of data to be 500 for further explorations. *Figure 14: 200 with K as 6, and 500 with K as 6*:
 
-*FIGURES HERE*
+
+<div align="center" >
+    <img src="Pics/re4/variation-of-K/200data/200_6.png" style="zoom:10%"/><img src="Pics/re4/variation-of-K/500data/500_6.png" style="zoom:10%"/></div>
+<div align="center">
+    Figure 14
+</div>
 
 We find that the number of spikes decreases as *K* increases. And one thing important is that there produce a high platform in the bigger side which is not the true distribution. On observations above, we prefer a smaller *K*, in order to prevent from losing too much information. 
+
+<div align="center" >
+<img src="Pics/re4/the_ans.png" style="zoom:10%"/><img src="Pics/re4/1000 the ans.png" style="zoom:10%"/>
+</div>
+
+<div align="center">
+    Figure 15
+</div>
 
 And as discussed in KDE, we could use some basic methods like minimizing the error. For convenience, we will still choose  *least-squares cross-validation* to get the best *K* here. According to the figure, 10 would be the best choice when consider a dataset with 500 data. And when we consider a larger dataset, such as 1000 data, we get another best *K*. So the best *K* grows as the growth of number of dataset. And unsurprisingly, the choice of *K* has a linear relationship with *N*, or say 2% of  *N*.
 
