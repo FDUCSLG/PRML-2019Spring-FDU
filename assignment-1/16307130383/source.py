@@ -1,5 +1,7 @@
-import os
-os.sys.path.append('..')
+# import os
+# os.sys.path.append('..')
+import sys,os
+sys.path.append(os.getcwd())
 # use the above line of code to surpass the top module barrier
 from handout import get_data
 import numpy as np
