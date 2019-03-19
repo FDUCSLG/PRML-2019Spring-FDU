@@ -37,7 +37,7 @@ For each assignment, the file should be structured like this
 │       └── __init__.py
 ```
 
-The `handout/` directory contains the facilities provided for you to accomplish the assignment, they will most likely be provided as python functions so that you could import it to your source code by adding the `..` to your python path (see [here]() for example).
+The `handout/` directory contains the facilities provided for you to accomplish the assignment, they will most likely be provided as python functions so that you could import it to your source code by adding the `..` to your python path (see [here](assignment-1/16307130177/source.py) for example).
 
 The workflow of doing the coursework is like:
 
