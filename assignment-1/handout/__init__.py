@@ -2,6 +2,7 @@ from typing import List
 import numpy as np
 import scipy.stats as ss
 import matplotlib.pyplot as plt
+
 np.random.seed(0)
 
 class GaussianMixture1D:
@@ -21,14 +22,13 @@ class GaussianMixture1D:
         stds = self.stds[choices]
         sampled_data = np.random.normal(modes, stds)
         return sampled_data
-
+        
     def plot(self, num_sample=100):
         sampled_data = self.sample([num_sample])
         min_range = min(self.modes) - 3 * self.std_range[1]
         max_range = max(self.modes) + 3 * self.std_range[1]
         xs = np.linspace(min_range, max_range, 2000)
         ys = np.zeros_like(xs)
-
         for l, s, w in zip(self.modes, self.stds, self.weights):
             ys += ss.norm.pdf(xs, loc=l, scale=s) * w
 
@@ -36,11 +36,11 @@ class GaussianMixture1D:
         # plt.hist(sampled_data, normed=True, bins=100)
         plt.xlabel("x")
         plt.ylabel("f(x)")
-        plt.show()
+        xs = np.linspace(min_range, max_range, 2000)
+        ys = np.zeros_like(xs)
 
 gm1d = GaussianMixture1D(mode_range=(0, 50))
 sampled_data = gm1d.sample([10000])
-
 def get_data(num_data:int = 100) -> List[float]:
     """
     Please use this function to access the given distribution, you should provide an int
@@ -48,5 +48,5 @@ def get_data(num_data:int = 100) -> List[float]:
     larger than 10000
     """
     assert num_data <= 10000
+    #gm1d.plot(100)
     return list(sampled_data[:num_data])
-# gm1d.plot(num_sample=1000)
