@@ -31,7 +31,7 @@ def kde(sample_data, test_data, h):
         for xn in sample_data:
             p[i] += math.exp(-(x-xn)**2 / (2 * h**2)) / math.sqrt(2 * math.pi * (h**2))
 
-    p /= len(test_data)
+    p /= len(sample_data)
     return p
 
 
@@ -58,6 +58,40 @@ def kde_plt(data_num, spot_num, h):
 # kde_plt(100, 100, 1)
 # kde_plt(100, 100, 2)
 
+def cross_validation(data_num, h_min, h_max):
+    sample_data = get_data(data_num)
+    steps = (h_max - h_min) / 10
+    lh_fun = np.zeros(10)
+    h_set = np.arange(h_min, h_max, steps)
+
+    def kde2(N, sample, t_i, h):
+        p = 0
+        for n, xn in enumerate(sample):
+            if(n == t_i):
+                continue
+            p += math.exp(-(sample[t_i] - xn) ** 2 / (2 * h ** 2)) / math.sqrt(2 * math.pi * (h ** 2))
+
+        p /= N-1
+        return p
+
+    for n in range(0, 10):
+        h = h_min + n * steps
+        for i in range(0, data_num):
+            p = kde2(data_num, sample_data, i, h)
+            lh_fun[n] += math.log10(p)
+
+    lh_fun /= data_num
+    plt.plot(h_set, lh_fun)
+    plt.title("Maximum likelihood cross-validation")
+    plt.xlabel('h')
+    plt.ylabel('likelihood function')
+    plt.show()
+    lh_arg = lh_fun.argsort()
+    return h_set[lh_arg[-1]]
+
+
+h_fit = cross_validation(100, 0.3, 0.4)
+kde_plt(100, 100, round(h_fit, 2))
 
 def knn(sample_data, test_data, data_num, k):
     p = np.empty_like(test_data)
