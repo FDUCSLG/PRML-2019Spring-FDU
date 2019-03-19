@@ -48,5 +48,5 @@ def get_data(num_data:int = 100) -> List[float]:
     larger than 10000
     """
     assert num_data <= 10000
-    #gm1d.plot(100)
+    #gm1d.plot(200)
     return list(sampled_data[:num_data])
