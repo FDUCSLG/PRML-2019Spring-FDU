@@ -14,7 +14,6 @@ import scipy
 #and count the number in the bin as n_i. And 
 # P_i=n_i/(N*Delta_i)
 # And we shoose the same width at the beginning.
-np.random.seed(0)
 #--------------
 #parameters
 #N=10000
@@ -24,6 +23,7 @@ Delta=0.08
 # plt.hist(sampled_data, normed=True, bins=50)
 # plt.show()
 def Hist(N,bins_in):
+    np.random.seed(0)
     sampled_data = get_data(N)
     plt.hist(sampled_data, normed=True, bins=bins_in)
     gm1d = GaussianMixture1D(mode_range=(0, 50))
@@ -34,8 +34,6 @@ def Hist(N,bins_in):
 
 
 ###KDE
-np.random.seed(0)
-
 #----------------------------------
 #Kernel Method
 #Give a window of every point of x, and we can get the neighbor area
@@ -48,7 +46,6 @@ np.random.seed(0)
 
 #functions:
 #compute the probability density at target with sample_data as dataset
-np.random.seed(0)
 def KernelGaussian(target,dataset,h_2,para):
     sum=0
     for x in dataset:
@@ -61,6 +58,7 @@ def KernelGaussian(target,dataset,h_2,para):
 # Main function
 # the only input here is the number of dataset
 def Kernel(num,N,h):
+    np.random.seed(0)
     output_data=[]
     h_2=h**2
     para=1/(float(N)*mt.sqrt(2*mt.pi*h_2))
@@ -80,7 +78,6 @@ def Kernel(num,N,h):
 
 
 ##k-NN
-np.random.seed(0)
 #--------------------------
 #Nearest Neighbor Method
 #Different from Kernel Method, we choose to fix K and varies V, and simply uses the function:
@@ -117,6 +114,7 @@ def KNN_Pro(target,dataset_ordered,N,K):
     return float(K)/(float(V)*N)
 
 def KNN(num,N,K):
+    np.random.seed(0)
     sampled_data = get_data(N)
     sampled_data.sort()
     output=[]
@@ -132,9 +130,9 @@ def KNN(num,N,K):
 
 ###main
 def main(c,num,bins,K,H,N):  
-    if(c=='H'): Histogram_Method.Hist(N,bins)
-    elif(c=='K'): Kernel_Method.Kernel(num,N,H)
-    else: Nearest_Neighbor_Method.KNN(num,N,K)
+    if(c=='H'): Hist(N,bins)
+    elif(c=='K'): Kernel(num,N,H)
+    else: KNN(num,N,K)
     
 
 # bins is the number of bins in Histogram Method
@@ -174,7 +172,7 @@ def M_k_NN(K):
     sample_data=get_data(N)
     sample_data.sort()
     def NNM_new(x):
-        return (NNM.KNN_Pro(x,sample_data,N-1,K))**2
+        return (KNN_Pro(x,sample_data,N-1,K))**2
     
     the_first=scipy.integrate.quad(NNM_new,20,40)
     the_second=0
@@ -184,7 +182,7 @@ def M_k_NN(K):
         tp_sample_data=sample_data[:]
         del tp_sample_data[flag]
         flag=flag+1
-        the_second=the_second+NNM.KNN_Pro(x,tp_sample_data,N-1,K)
+        the_second=the_second+KNN_Pro(x,tp_sample_data,N-1,K)
         # print(x)
     the_second=the_second*2/N
 
@@ -222,46 +220,46 @@ def requirement_1():
         print('Histogram:')
         # num,K,bins,K,h,N
         print("num=200")
-        main.main('H',1000,50,20,0.8,200)
+        main('H',1000,50,20,0.8,200)
         print("num=500")
-        main.main('H',1000,50,20,0.8,500)
+        main('H',1000,50,20,0.8,500)
         print("num=1000")
-        main.main('H',1000,50,20,0.8,1000)
+        main('H',1000,50,20,0.8,1000)
         print("num=10000")
-        main.main('H',1000,50,20,0.8,10000)
+        main('H',1000,50,20,0.8,10000)
     elif c=='K':
         print('KDE:')
         print("num=200")
-        main.main('K',1000,50,20,0.08,200)
+        main('K',1000,50,20,0.08,200)
         print("num=500")
-        main.main('K',1000,50,20,0.08,500)
+        main('K',1000,50,20,0.08,500)
         print("num=1000")
-        main.main('K',1000,50,20,0.08,1000)
+        main('K',1000,50,20,0.08,1000)
         print("num=10000")
-        main.main('K',1000,50,20,0.08,10000)
+        main('K',1000,50,20,0.08,10000)
     else:
         print('k-NN')
         print("num=200")
-        main.main('N',1000,50,20,0.8,100)
+        main('N',1000,50,20,0.8,100)
         print("num=500")
-        main.main('N',1000,50,20,0.8,500)
+        main('N',1000,50,20,0.8,500)
         print("num=1000")
-        main.main('N',1000,50,20,0.8,1000)
+        main('N',1000,50,20,0.8,1000)
         print("num=10000")
-        main.main('N',1000,50,20,0.8,10000)
+        main('N',1000,50,20,0.8,10000)
 
 ##  REQUIREMENT 2
 def requirement_2():
     x=eval(input("Please input a num for N:"))
     print("N=%d now, and bins varies in order: 50, 100, 150, 200"%(x)) 
     print("bins=50")
-    main.main('H',1000,50,20,0.8,x)
+    main('H',1000,50,20,0.8,x)
     print("bins=100")
-    main.main('H',1000,100,20,0.8,x)
+    main('H',1000,100,20,0.8,x)
     print("bins=150")
-    main.main('H',1000,150,20,0.8,x)
+    main('H',1000,150,20,0.8,x)
     print("bins=200")
-    main.main('H',1000,200,20,0.8,x)
+    main('H',1000,200,20,0.8,x)
 
 ##  REQUIREMENT 3
 def requirement_3():
@@ -270,19 +268,19 @@ def requirement_3():
         x=eval(input("Please input a num for N:"))
         print("N=%d now, and h varies in order: 0.01, 0.08, 0.2, 0.4, 0.8"%(x)) 
         print("h=0.01")
-        main.main('K',1000,50,20,0.01,x)
+        main('K',1000,50,20,0.01,x)
         print("h=0.08")
-        main.main('K',1000,50,20,0.08,x)
+        main('K',1000,50,20,0.08,x)
         print("h=0.2")
-        main.main('K',1000,50,20,0.2,x)
+        main('K',1000,50,20,0.2,x)
         print("h=0.4")
-        main.main('K',1000,50,20,0.4,x)
+        main('K',1000,50,20,0.4,x)
         print("h=0.8")
-        main.main('K',1000,50,20,0.8,x)
+        main('K',1000,50,20,0.8,x)
     else:
         print("N=100 here")
         best_h()
-        M_KDE(0.4)
+        main('K',1000,50,20,0.4,100)
 
         
 ##  REQUIREMENT 4
@@ -291,15 +289,15 @@ def requirement_4():
     if c=='0':
         x=eval(input("Please input a N:"))
         print("K are in order: 3, 6, 9, 12, 20")
-        main.main('N',1000,3,20,0.8,x)
-        main.main('N',1000,6,20,0.8,x)
-        main.main('N',1000,9,20,0.8,x)
-        main.main('N',1000,12,20,0.8,x)
-        main.main('N',1000,20,20,0.8,x)
+        main('N',1000,3,20,0.8,x)
+        main('N',1000,6,20,0.8,x)
+        main('N',1000,9,20,0.8,x)
+        main('N',1000,12,20,0.8,x)
+        main('N',1000,20,20,0.8,x)
     else:
         print("N=500 here")
         best_K()
-        M_k_NN(10)
+        main('N',1000,50,10,0.8,500)
 
 
 print("Bonjor!")
@@ -307,11 +305,11 @@ while 1:
     c=input("Please input 1,2,3,4 according to the require_id you are interested,others to exit:")
     if c=='1':
         requirement_1()
-    elif c=='1':
+    elif c=='2':
         requirement_2()
-    elif c=='1':
+    elif c=='3':
         requirement_3()
-    elif c=='1':
+    elif c=='4':
         requirement_4()
     else:
         print("So, that's all about this work. See you!")
