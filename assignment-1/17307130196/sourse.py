@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from handout import GaussianMixture1D
 import math as mt
-
+import scipy
 ### Histogram Method
 #First the Histogram Method
 #Simply partition x into bins of width Delta_i
@@ -142,25 +142,179 @@ def main(c,num,bins,K,H,N):
 # K is the key parameter in Nearest Neighbor Method
 # num is the number of test in Kernel and Nearest Neighbor Method
 
-###Requirement-1
-import main
-print('H:')
-#num,K,bins,K,h,N
-# main.main('H',1000,80,5,0.8,200)
-# main.main('H',1000,50,20,0.8,500)
-# main.main('H',1000,50,20,0.8,1000)
-# main.main('H',1000,50,20,0.8,10000)
 
-# print('K:')
-# main.main('K',1000,50,20,0.275,200)
-# main.main('K',1000,50,20,0.6,500)
-# main.main('K',1000,50,20,0.8,1000)
-# main.main('K',1000,50,20,0.08,100)
-# main.main('K',1000,50,20,0.08,10000)
+# ass functions
+#compute M-0 for KDE
 
-# print('N:')
-main.main('N',1000,50,20,0.8,100)
-# main.main('N',1000,50,20,0.8,500)
-# main.main('N',1000,50,20,0.8,1000)
-# main.main('N',1000,50,20,0.8,10000)
+def M_KDE(h):
+    sample_data=get_data()
+    N=100
+    h_2=h**2
+    para=1/(float(N)*mt.sqrt(2*mt.pi*h_2))
+    para_i=1/(float(N-1)*mt.sqrt(2*mt.pi*h_2))
+    def KDE_new(x):
+        return (KernelGaussian(x,sample_data,h_2,para))**2
+    the_first=scipy.integrate.quad(KDE_new,20,40)
+    the_second=0
+    flag=0
+
+    for x in sample_data:
+        tp_sample_data=sample_data[:]
+        del tp_sample_data[flag]
+        flag=flag+1
+        the_second=the_second+KernelGaussian(x,tp_sample_data,h_2,para_i)
+    the_second=the_second*2/N
+
+    M0=the_first[0]-the_second
+    return M0
+
+#compute M_0 for k-NN
+N=500
+def M_k_NN(K):
+    sample_data=get_data(N)
+    sample_data.sort()
+    def NNM_new(x):
+        return (NNM.KNN_Pro(x,sample_data,N-1,K))**2
+    
+    the_first=scipy.integrate.quad(NNM_new,20,40)
+    the_second=0
+    flag=0
+
+    for x in sample_data:
+        tp_sample_data=sample_data[:]
+        del tp_sample_data[flag]
+        flag=flag+1
+        the_second=the_second+NNM.KNN_Pro(x,tp_sample_data,N-1,K)
+        # print(x)
+    the_second=the_second*2/N
+
+    M0=the_first[0]-the_second
+    return M0
+
+
+#compute the best h
+def best_h():
+    ans=[]
+    for i in range(1,20):
+        ans.append(M_KDE(i*0.05))
+
+    plt.plot([i*0.5 for i in range(1,20)],ans)
+    plt.show()
+
+#compute best K
+def best_K():
+    ans=[]
+    for i in range(2,50):
+        ans.append(M_k_NN(i))
+
+    plt.plot(range(2,50),ans)
+    plt.show()
+
+
+
+#----------------------------
+#----------------------------
+# Requirements starts now
+##  REQUIREMENT 1
+def requirement_1():
+    c=input("Please input a char: H for Hist, K for KDE and N for k-NN:")
+    if c== 'H':
+        print('Histogram:')
+        # num,K,bins,K,h,N
+        print("num=200")
+        main.main('H',1000,50,20,0.8,200)
+        print("num=500")
+        main.main('H',1000,50,20,0.8,500)
+        print("num=1000")
+        main.main('H',1000,50,20,0.8,1000)
+        print("num=10000")
+        main.main('H',1000,50,20,0.8,10000)
+    elif c=='K':
+        print('KDE:')
+        print("num=200")
+        main.main('K',1000,50,20,0.08,200)
+        print("num=500")
+        main.main('K',1000,50,20,0.08,500)
+        print("num=1000")
+        main.main('K',1000,50,20,0.08,1000)
+        print("num=10000")
+        main.main('K',1000,50,20,0.08,10000)
+    else:
+        print('k-NN')
+        print("num=200")
+        main.main('N',1000,50,20,0.8,100)
+        print("num=500")
+        main.main('N',1000,50,20,0.8,500)
+        print("num=1000")
+        main.main('N',1000,50,20,0.8,1000)
+        print("num=10000")
+        main.main('N',1000,50,20,0.8,10000)
+
+##  REQUIREMENT 2
+def requirement_2():
+    x=eval(input("Please input a num for N:"))
+    print("N=%d now, and bins varies in order: 50, 100, 150, 200"%(x)) 
+    print("bins=50")
+    main.main('H',1000,50,20,0.8,x)
+    print("bins=100")
+    main.main('H',1000,100,20,0.8,x)
+    print("bins=150")
+    main.main('H',1000,150,20,0.8,x)
+    print("bins=200")
+    main.main('H',1000,200,20,0.8,x)
+
+##  REQUIREMENT 3
+def requirement_3():
+    c=input("Please input a bool. 0 for viewing plot under different h, while 1 for the plot for CV in h:")
+    if c=='0':
+        x=eval(input("Please input a num for N:"))
+        print("N=%d now, and h varies in order: 0.01, 0.08, 0.2, 0.4, 0.8"%(x)) 
+        print("h=0.01")
+        main.main('K',1000,50,20,0.01,x)
+        print("h=0.08")
+        main.main('K',1000,50,20,0.08,x)
+        print("h=0.2")
+        main.main('K',1000,50,20,0.2,x)
+        print("h=0.4")
+        main.main('K',1000,50,20,0.4,x)
+        print("h=0.8")
+        main.main('K',1000,50,20,0.8,x)
+    else:
+        print("N=100 here")
+        best_h()
+        M_KDE(0.4)
+
+        
+##  REQUIREMENT 4
+def requirement_4():
+    c=input("Please input a bool. 0 for viewing plot under different K, while 1 for the plot for CV in K:")
+    if c=='0':
+        x=eval(input("Please input a N:"))
+        print("K are in order: 3, 6, 9, 12, 20")
+        main.main('N',1000,3,20,0.8,x)
+        main.main('N',1000,6,20,0.8,x)
+        main.main('N',1000,9,20,0.8,x)
+        main.main('N',1000,12,20,0.8,x)
+        main.main('N',1000,20,20,0.8,x)
+    else:
+        print("N=500 here")
+        best_K()
+        M_k_NN(10)
+
+
+print("Bonjor!")
+while 1:
+    c=input("Please input 1,2,3,4 according to the require_id you are interested,others to exit:")
+    if c=='1':
+        requirement_1()
+    elif c=='1':
+        requirement_2()
+    elif c=='1':
+        requirement_3()
+    elif c=='1':
+        requirement_4()
+    else:
+        print("So, that's all about this work. See you!")
+        break
+
 
