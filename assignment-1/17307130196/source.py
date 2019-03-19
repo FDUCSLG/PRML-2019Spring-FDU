@@ -149,7 +149,7 @@ def sum_of_squire(l1,l2,N):
     return sum
 
 def Hist_new(N,dataset,bins): #get the prediction estimation
-    size=20/float(bins)
+    size=20/bins
     ans=[]
     i=0
     j=0 #marks the bin_id
@@ -159,18 +159,21 @@ def Hist_new(N,dataset,bins): #get the prediction estimation
             tp=tp+1
             i=i+1
         ans.append(tp/N)
+        # print(tp/N)
         j=j+1
     return ans
 
 def simple_CV(bins,N): #return the result of CV test
-    test_num=int(N/20)
+    test_num=int(N/2)
     sampled_data = get_data(N)
-    sampled_data_exchange=sampled_data[:]
+    sampled_data_exchange=sampled_data[test_num:N]
     sampled_data_exchange.sort()
     size=20/float(bins)
     
-    pred_distribution=Hist_new(N-test_num,sampled_data_exchange[test_num:N-1],bins)
+    pred_distribution=Hist_new(N-test_num,sampled_data_exchange,bins)
     # print(pred_distribution)
+    # plt.plot(range(0,len(pred_distribution)),pred_distribution)
+    # plt.show()
     pred=[]
     for i in range(0,test_num):
         s=random.random()
@@ -178,8 +181,8 @@ def simple_CV(bins,N): #return the result of CV test
         while s>0 and j<len(pred_distribution):
             s=s-pred_distribution[j]
             j=j+1
-        pred.append(j*size+20-0.5*size)
-        print(pred)
+        pred.append(j*size+20)
+        # print(pred)
     return sum_of_squire(pred,sampled_data[0:len(pred)],test_num)
 
 def M_HIS(bins):
@@ -237,13 +240,13 @@ def M_k_NN(K):
 #compute the best bins
 def best_bins_simple_cv():
     ans=[]
-    for i in range(1,100):
+    for i in range(1,200):
         sum=0
-        for j in range(1,30):
-            sum=sum+simple_CV(i,200)
-        sum=sum/30
+        for j in range(1,2):
+            sum=sum+simple_CV(i,1000)
+        # sum=sum/30
         ans.append(sum)
-    plt.plot(range(1,100),ans)
+    plt.plot(range(1,200),ans)
     plt.show()
 
 
