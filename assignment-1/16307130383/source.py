@@ -36,16 +36,17 @@ def draw_kernel(data_num, h):
   x_array = []
   y_array = []
   sampled_data = sorted(sampled_data)
-  for sample in sampled_data:
-    x = sample
-    px = count_gaussian(sampled_data, x, h)
-    x_array.append(x)
-    y_array.append(px)
-  # for i in range(0, int( (num_max-num_min)/h )):
-  #   x = i*h + h/2 + num_min
+  # for sample in sampled_data:
+  #   x = sample
   #   px = count_gaussian(sampled_data, x, h)
   #   x_array.append(x)
   #   y_array.append(px)
+  plot_num = 1000
+  for i in range(0, plot_num):
+    x = i*(num_max - num_min)/plot_num + num_min
+    px = count_gaussian(sampled_data, x, h)
+    x_array.append(x)
+    y_array.append(px)
   plt.plot(x_array, y_array)
   # plt.show()
 
@@ -53,33 +54,63 @@ def draw_kernel(data_num, h):
 #-------------------------
 # draw nearest neighbor estimation
 #-------------------------
-def get_volume(sampled_data, index, K):
-  assert K <= len(sampled_data)
-  # print('--------------')
-  l = index
-  r = index
-  count = 1
-  while(count < K):
-    # print("{} {} {}".format( sampled_data[l], sampled_data[index], sampled_data[r] ))
-    if l <= 0 or (r < len(sampled_data)-1 and sampled_data[index] - sampled_data[l-1] > sampled_data[r+1] - sampled_data[index]):
-      count += 1
-      r += 1
+# def get_volume(sampled_data, index, K):
+#   assert K <= len(sampled_data)
+#   # print('--------------')
+#   l = index
+#   r = index
+#   count = 1
+#   while(count < K):
+#     # print("{} {} {}".format( sampled_data[l], sampled_data[index], sampled_data[r] ))
+#     if l <= 0 or (r < len(sampled_data)-1 and sampled_data[index] - sampled_data[l-1] > sampled_data[r+1] - sampled_data[index]):
+#       count += 1
+#       r += 1
+#     else:
+#       count += 1
+#       l -= 1
+#   return sampled_data[r] - sampled_data[l]
+
+def get_next_index(sampled_data, x):
+  l = 0
+  r = len(sampled_data)
+  while r - l > 1:
+    mid = int( (l+r)/2 )
+    if sampled_data[mid] > x:
+      r = mid
     else:
-      count += 1
-      l -= 1
-  return sampled_data[r] - sampled_data[l]
+      l = mid
+  return l
+
+def get_volume_new(sampled_data, index, K):
+  # print('------------')
+  i = max(index - K + 2, 0)
+  volume = 10000
+  while i <= index and i+K <= len(sampled_data):
+    # print([i, i+K-1, sampled_data[i+K-1], sampled_data[i]])
+    volume = min(volume, sampled_data[i+K-1] - sampled_data[i])
+    i += 1
+  return volume
 
 def draw_nearest(data_num, K):
   sampled_data = get_data(data_num)
+  num_max = max(sampled_data)
+  num_min = min(sampled_data)
   x_array = []
   y_array = []
   N = len(sampled_data)
   sampled_data = sorted(sampled_data)
-  for i, sample in enumerate(sampled_data):
-    x = sample
-    px = K /( N*get_volume(sampled_data, i, K) )
+  plot_num = 200
+  for i in range(1, plot_num):
+    x = i*(num_max - num_min)/plot_num + num_min
+    index = get_next_index(sampled_data, x)
+    px = K /( N*get_volume_new(sampled_data, index, K) )
     x_array.append(x)
     y_array.append(px)
+  # for i, sample in enumerate(sampled_data):
+  #   x = sample
+  #   px = K /( N*get_volume(sampled_data, i, K) )
+  #   x_array.append(x)
+  #   y_array.append(px)
   plt.plot(x_array, y_array)
   # plt.show()
 
