@@ -14,10 +14,11 @@ def histmd(data_num = 200, bin_num = 50):
     plt.title('Histogram Method\ndata_num='+str(data_num)+'  bins='+str(bin_num))
     plt.xlabel('x')
     plt.ylabel('f(x)')
+    gm1d.plot(num_sample=1000)
     plt.show()
 
 
-# histmd(bin_num=10)
+# histmd(bin_num=5)
 # histmd(bin_num=20)
 # histmd(bin_num=50)
 # histmd(bin_num=100)
@@ -41,19 +42,21 @@ def kde_plt(data_num, spot_num, h):
     spot_data = np.linspace(min_x, max_x, spot_num)
 
     p = kde(sample_data, spot_data, h)
-    plt.plot(spot_data, p)
+    plt.plot(spot_data, p, label = 'h=' + str(h))
     plt.xlabel('x')
     plt.ylabel('f(x)')
     plt.title('Kernel Density Estimation\ndata_num=' + str(data_num) + '  h=' + str(h))
+    plt.legend()
+    gm1d.plot(num_sample=1000)
     plt.show()
 
 
-# kde_plt(100, 100, 0.002)
-# kde_plt(100, 100, 0.1)
+# kde_plt(100, 100, 0.05)
+# kde_plt(100, 100, 0.2)
+# kde_plt(100, 100, 0.6)
 # kde_plt(100, 100, 0.5)
 # kde_plt(100, 100, 1)
 # kde_plt(100, 100, 2)
-# kde_plt(100, 100, 5)
 
 
 def knn(sample_data, test_data, data_num, k):
@@ -77,18 +80,20 @@ def knn_plt(data_num, spot_num, k):
     spot_data = np.linspace(min_x, max_x, spot_num)
 
     p = knn(sample_data, spot_data, data_num, k)
-    plt.plot(spot_data, p)
+    plt.plot(spot_data, p, label = 'k=' + str(k))
     plt.title('K-nearest neighbor\ndata_num=' + str(data_num) + '  K=' + str(k))
+    plt.legend()
+    plt.axis([15, 40, -0.02, 0.45])
     gm1d.plot(num_sample=1000)
     plt.show()
 
 
 # knn_plt(200, 200, 1)
 # knn_plt(200, 200, 5)
+# knn_plt(200, 200, 10)
 # knn_plt(200, 200, 20)
-# knn_plt(200, 200, 35)
-# knn_plt(200, 200, 40)
-# knn_plt(200, 200, 100)
+# knn_plt(200, 200, 50)
+# knn_plt(200, 200, 25)
 
 def main(argv=sys.argv):
     if(len(argv) < 4):
