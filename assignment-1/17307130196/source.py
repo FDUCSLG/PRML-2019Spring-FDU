@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from handout import GaussianMixture1D
 import math as mt
 import scipy
+import random
 ### Histogram Method
 #First the Histogram Method
 #Simply partition x into bins of width Delta_i
@@ -16,8 +17,6 @@ import scipy
 # And we shoose the same width at the beginning.
 #--------------
 #parameters
-#N=10000
-Delta=0.08
 #--------------
 # sampled_data = get_data(N)
 # plt.hist(sampled_data, normed=True, bins=50)
@@ -142,6 +141,52 @@ def main(c,num,bins,K,H,N):
 
 
 # ass functions
+# Simple CV for Histogram
+def sum_of_squire(l1,l2,N):
+    sum=0
+    for i in range(0,N):
+        sum=sum+(l1[i]-l2[i])**2
+    return sum
+
+def Hist_new(N,dataset,bins): #get the prediction estimation
+    size=20/float(bins)
+    ans=[]
+    i=0
+    j=0 #marks the bin_id
+    while i<N-1 and j<bins:
+        tp=0
+        while i<N-1 and dataset[i]<=j*size+20:
+            tp=tp+1
+            i=i+1
+        ans.append(tp/N)
+        j=j+1
+    return ans
+
+def simple_CV(bins,N): #return the result of CV test
+    test_num=int(N/20)
+    sampled_data = get_data(N)
+    sampled_data_exchange=sampled_data[:]
+    sampled_data_exchange.sort()
+    size=20/float(bins)
+    
+    pred_distribution=Hist_new(N-test_num,sampled_data_exchange[test_num:N-1],bins)
+    # print(pred_distribution)
+    pred=[]
+    for i in range(0,test_num):
+        s=random.random()
+        j=0
+        while s>0 and j<len(pred_distribution):
+            s=s-pred_distribution[j]
+            j=j+1
+        pred.append(j*size+20-0.5*size)
+        print(pred)
+    return sum_of_squire(pred,sampled_data[0:len(pred)],test_num)
+
+def M_HIS(bins):
+    N=200
+    sample_data=get_data(N)
+    def SCV_new(x):
+        return (simple_CV(x,sample_data,h_2,para))**2
 #compute M-0 for KDE
 
 def M_KDE(h):
@@ -167,8 +212,8 @@ def M_KDE(h):
     return M0
 
 #compute M_0 for k-NN
-N=500
 def M_k_NN(K):
+    N=500
     sample_data=get_data(N)
     sample_data.sort()
     def NNM_new(x):
@@ -188,6 +233,18 @@ def M_k_NN(K):
 
     M0=the_first[0]-the_second
     return M0
+
+#compute the best bins
+def best_bins_simple_cv():
+    ans=[]
+    for i in range(1,100):
+        sum=0
+        for j in range(1,30):
+            sum=sum+simple_CV(i,200)
+        sum=sum/30
+        ans.append(sum)
+    plt.plot(range(1,100),ans)
+    plt.show()
 
 
 #compute the best h
@@ -250,16 +307,20 @@ def requirement_1():
 
 ##  REQUIREMENT 2
 def requirement_2():
-    x=eval(input("Please input a num for N:"))
-    print("N=%d now, and bins varies in order: 50, 100, 150, 200"%(x)) 
-    print("bins=50")
-    main('H',1000,50,20,0.8,x)
-    print("bins=100")
-    main('H',1000,100,20,0.8,x)
-    print("bins=150")
-    main('H',1000,150,20,0.8,x)
-    print("bins=200")
-    main('H',1000,200,20,0.8,x)
+    c=input("Please input a bool. 0 for viewing plot under different bins, while 1 for the plot for CV in bins:")
+    if c=='0':
+        x=eval(input("Please input a num for N:"))
+        print("N=%d now, and bins varies in order: 50, 100, 150, 200"%(x)) 
+        print("bins=50")
+        main('H',1000,50,20,0.8,x)
+        print("bins=100")
+        main('H',1000,100,20,0.8,x)
+        print("bins=150")
+        main('H',1000,150,20,0.8,x)
+        print("bins=200")
+        main('H',1000,200,20,0.8,x)
+    else:
+        best_bins_simple_cv()
 
 ##  REQUIREMENT 3
 def requirement_3():
@@ -314,5 +375,3 @@ while 1:
     else:
         print("So, that's all about this work. See you!")
         break
-
-
