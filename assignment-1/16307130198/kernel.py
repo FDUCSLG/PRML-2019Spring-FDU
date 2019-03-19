@@ -31,7 +31,7 @@ def estimation_kernel(sampled_data, gm1d, h):
     gm1d_plot(gm1d)
     data_min = min(sampled_data)-2
     data_max = max(sampled_data)+2
-    prediction_x = np.linspace(data_min, data_max,2000)
+    prediction_x = np.linspace(data_min, data_max,500)
     #new_h = 1.06 * np.std(sampled_data) * math.pow(len(sampled_data), -1/5)
     es_density = np.array(graussian_kernel_cal(prediction_x, sampled_data, h))
     plt.plot(prediction_x, es_density, label="kernel estimation\nh: "+str(h))

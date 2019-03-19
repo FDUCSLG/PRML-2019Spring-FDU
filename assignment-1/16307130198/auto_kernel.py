@@ -76,7 +76,7 @@ def estimation_auto_kernel(sampled_data, gm1d):
     gm1d_plot(gm1d)
     data_min = min(sampled_data)-2
     data_max = max(sampled_data)+2
-    prediction_x = np.linspace(data_min, data_max,100)
+    prediction_x = np.linspace(data_min, data_max,500)
     #prediction_x = np.sort(sampled_data)
     es_density,h = np.array(graussian_kernel_density_estimation(prediction_x, sampled_data))
     plt.title('Kernel Estimation Method\nData Number: '+str(len(sampled_data)))

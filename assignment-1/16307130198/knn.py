@@ -65,7 +65,7 @@ def knn_estimate_density(prediction_x, sequence_x, k):
 def estimation_knn(sampled_data, gm1d, k):
     #gm1d.plot()
     gm1d_plot(gm1d)
-    prediction_x = np.linspace(0,50,100)
+    prediction_x = np.linspace(0,50,500)
     sampled_data = np.array(sampled_data)
     sampled_data.sort()
     es_density = knn_estimate_density(prediction_x, sampled_data, k) 
