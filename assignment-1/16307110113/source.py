@@ -18,11 +18,10 @@ def histmd(data_num = 200, bin_num = 50):
     plt.show()
 
 
-# histmd(bin_num=5)
-# histmd(bin_num=20)
-# histmd(bin_num=50)
-# histmd(bin_num=100)
-# histmd(bin_num=500)
+histmd(100, 30)
+histmd(500, 30)
+histmd(1000, 30)
+histmd(10000, 30)
 
 def kde(sample_data, test_data, h):
 
@@ -51,11 +50,10 @@ def kde_plt(data_num, spot_num, h):
     plt.show()
 
 
-# kde_plt(100, 100, 0.05)
-# kde_plt(100, 100, 0.2)
-# kde_plt(100, 100, 0.6)
-# kde_plt(100, 100, 0.5)
-# kde_plt(100, 100, 1)
+kde_plt(100, 100, 0.36)
+kde_plt(500, 100, 0.36)
+kde_plt(1000, 100, 0.36)
+kde_plt(10000, 100, 0.36)
 # kde_plt(100, 100, 2)
 
 def cross_validation(data_num, h_min, h_max):
@@ -86,12 +84,23 @@ def cross_validation(data_num, h_min, h_max):
     plt.xlabel('h')
     plt.ylabel('likelihood function')
     plt.show()
+
     lh_arg = lh_fun.argsort()
-    return h_set[lh_arg[-1]]
+    h_fit = round(h_set[lh_arg[-1]], 2)
+    print("the best choice of h: " + str(h_fit))
 
+    max_x = max(sample_data)
+    min_x = min(sample_data)
+    spot_data = np.linspace(min_x, max_x, data_num)
+    p = kde(sample_data, spot_data, h_fit)
+    plt.plot(spot_data, p, label='h=' + str(h_fit))
+    plt.xlabel('x')
+    plt.ylabel('f(x)')
+    plt.title('Kernel Density Estimation\ndata_num=' + str(data_num) + '  h=' + str(h_fit))
+    plt.legend()
+    gm1d.plot(num_sample=1000)
+    plt.show()
 
-h_fit = cross_validation(100, 0.3, 0.4)
-kde_plt(100, 100, round(h_fit, 2))
 
 def knn(sample_data, test_data, data_num, k):
     p = np.empty_like(test_data)
@@ -122,26 +131,57 @@ def knn_plt(data_num, spot_num, k):
     plt.show()
 
 
-# knn_plt(200, 200, 1)
-# knn_plt(200, 200, 5)
-# knn_plt(200, 200, 10)
-# knn_plt(200, 200, 20)
-# knn_plt(200, 200, 50)
-# knn_plt(200, 200, 25)
+knn_plt(100, 100, 10)
+knn_plt(500, 100, 10)
+knn_plt(1000, 100, 10)
+knn_plt(1000, 100, 10)
+# knn_plt(200, 100, 25)
+
+# def bin_test(bin_min = 10, bin_max = 60):
+#     data_num = 200
+#     sample_data = get_data(data_num)
+#     step = int((bin_max - bin_min) / 10)
+#     empty_rate = np.zeros(10)
+#     max_x = max(sample_data)
+#     min_x = min(sample_data)
+#     bin_list = range(bin_min, bin_max, step)
+#
+#     for n in range(0, 10):
+#         bins = bin_min + n * step
+#         counts = np.zeros(bins + 1)
+#         for x in sample_data:
+#             pos = (x - min_x) * bins / (max_x - min_x)
+#             counts[int(pos)] += 1
+#         empty_rate[n] = sum(counts == 0) / bins
+#
+#     arg_bin = empty_rate.argsort()
+#     bin_fit = bin_list[arg_bin[0]]
+#     print("The best choice of bin_num: " + str(bin_fit))
+#
+#     plt.plot(bin_list, empty_rate)
+#     plt.title("Bin_Num Selection")
+#     plt.xlabel('bins')
+#     plt.ylabel('empty rate')
+#     plt.show()
+
+
+def cv_test(h_min = 0.3, h_max = 0.5):
+    cross_validation(100, h_min, h_max)
+
 
 def main(argv=sys.argv):
     if(len(argv) < 4):
         print("You should select the method and parameters")
         exit(1)
 
-    data_num = int(argv[2])
-
     if(argv[1] == '--hist'):
-        histmd(data_num, int(argv[3]))
+        histmd(int(argv[2]), int(argv[3]))
     elif(argv[1] == '--kde'):
-        kde_plt(data_num, data_num, float(argv[3]))
+        kde_plt(int(argv[2]), int(argv[2]), float(argv[3]))
     elif(argv[1] == '--knn'):
-        knn_plt(data_num, data_num, int(argv[3]))
+        knn_plt(int(argv[2]), int(argv[2]), int(argv[3]))
+    elif(argv[1] == '--cv'):
+        cv_test(float(argv[2]), float(argv[3]))
     else:
         print("You should select the method and parameters")
         exit(1)
