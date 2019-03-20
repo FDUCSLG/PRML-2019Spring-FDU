@@ -43,13 +43,13 @@ The workflow of doing the coursework is like:
 
 1. You fork this repository, and clone your forked repository to your local workplace.  
   ```
-  git clone git@github.com:your_username/PRML-Spring19-Fudan.git
+  git clone https://github.com/ichn-hu/PRML-Spring19-Fudan.git
   ```
 
 2. When new assignment is released, first pull the updates in the original repository in your local cloned workplace, and create a directory with your student id (or mask student id) under the assignment directory, and only work in your own directory so that you won't conflict with others.  
   ```
   # First, open a terminal and navigate to the root of your local repository. Then type:
-  git pull git@github.com:ichn-hu/PRML-Spring19-Fudan.git
+  git pull https://github.com/ichn-hu/PRML-Spring19-Fudan.git
   # this command will update your local repository with the upstream update for the coursework
   # then make a directory for your submission
   cd assignment-1 # assignment-2 or so
