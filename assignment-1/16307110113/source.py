@@ -120,32 +120,29 @@ def knn_plt(data_num, spot_num, k):
     plt.show()
 
 
-# def bin_test(bin_min = 10, bin_max = 60):
-#     data_num = 200
-#     sample_data = get_data(data_num)
-#     step = int((bin_max - bin_min) / 10)
-#     empty_rate = np.zeros(10)
-#     max_x = max(sample_data)
-#     min_x = min(sample_data)
-#     bin_list = range(bin_min, bin_max, step)
-#
-#     for n in range(0, 10):
-#         bins = bin_min + n * step
-#         counts = np.zeros(bins + 1)
-#         for x in sample_data:
-#             pos = (x - min_x) * bins / (max_x - min_x)
-#             counts[int(pos)] += 1
-#         empty_rate[n] = sum(counts == 0) / bins
-#
-#     arg_bin = empty_rate.argsort()
-#     bin_fit = bin_list[arg_bin[0]]
-#     print("The best choice of bin_num: " + str(bin_fit))
-#
-#     plt.plot(bin_list, empty_rate)
-#     plt.title("Bin_Num Selection")
-#     plt.xlabel('bins')
-#     plt.ylabel('empty rate')
-#     plt.show()
+def bin_test(bin_min = 5, bin_max = 55, step = 5):
+    data_num = 200
+    sample_data = get_data(data_num)
+    cases = int((bin_max - bin_min) / step)
+    empty_rate = np.zeros(cases)
+    max_x = max(sample_data)
+    min_x = min(sample_data)
+    bin_list = range(bin_min, bin_max, step)
+
+    for n in range(0, cases):
+        bins = bin_min + n * step
+        counts = np.zeros(bins + 1)
+        for x in sample_data:
+            pos = (x - min_x) * bins / (max_x - min_x)
+            counts[int(pos)] += 1
+        empty_rate[n] = sum(counts == 0) / bins
+
+    plt.plot(bin_list, empty_rate)
+    plt.title("Bin_Num Selection")
+    plt.xlabel('bins')
+    plt.ylabel('empty rate')
+    plt.grid()
+    plt.show()
 
 
 def cv_test(h_min = 0.3, h_max = 0.5):
@@ -160,11 +157,13 @@ def main(argv=sys.argv):
     if(argv[1] == '--hist'):
         histmd(int(argv[2]), int(argv[3]))
     elif(argv[1] == '--kde'):
-        kde_plt(int(argv[2]), int(argv[2]), float(argv[3]))
+        kde_plt(int(argv[2]), 200, float(argv[3]))
     elif(argv[1] == '--knn'):
-        knn_plt(int(argv[2]), int(argv[2]), int(argv[3]))
+        knn_plt(int(argv[2]), 200, int(argv[3]))
     elif(argv[1] == '--cv'):
         cv_test(float(argv[2]), float(argv[3]))
+    elif(argv[1] == '--bin'):
+        bin_test(int(argv[2]), int(argv[3]), int(argv[4]))
     else:
         print("You should select the method and parameters")
         exit(1)
