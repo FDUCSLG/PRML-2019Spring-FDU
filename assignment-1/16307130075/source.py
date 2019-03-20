@@ -20,7 +20,7 @@ def truth():
         ys += ss.norm.pdf(xs, loc=l, scale=s) * w
     plt.plot(xs, ys)
     
-
+#histogram
 def hist(num_data = 200, num_bins = 50, ptype = "varbin"):
     sampled_data = get_data(num_data)
     if ptype == "varbin":
@@ -41,12 +41,14 @@ def calc_density(x, data, h):
     p = p * const / n
     return p
 
+#calc likelihood
 def calc_gauss_likelihood(h, trainset, testset):
     l = 0
     for x in testset:
         l += math.log(calc_density(x, trainset, h))
     return l
 
+#find best h
 def find_maxli(dataset, k_fold = 5):
     n = len(dataset)
     random.shuffle(dataset)
@@ -65,6 +67,7 @@ def find_maxli(dataset, k_fold = 5):
             best_h = h
     return best_h
 
+#gauss
 def gauss_kernel(num_data = 100, h = None, ptype = "varh", num_inter = 2000):
     sampled_data = get_data(num_data)
     mini, maxi = min(sampled_data), max(sampled_data)
@@ -73,8 +76,6 @@ def gauss_kernel(num_data = 100, h = None, ptype = "varh", num_inter = 2000):
     if h is None:
         h = find_maxli(sampled_data)
     
-    print(h)
-        
     p_list = []
     for x in x_list:
         p = calc_density(x, sampled_data, h)
@@ -87,7 +88,7 @@ def gauss_kernel(num_data = 100, h = None, ptype = "varh", num_inter = 2000):
     plt.plot(x_list, p_list)
     
     
-
+#knn
 def knn_estimation(num_data, k, ptype = "vark", num_inter = 2000):
     if k > num_data:
         print("Error!k is larger than the size of dataset")
@@ -160,8 +161,8 @@ def fast_knn_estimation(num_data, k, ptype = "vark", num_inter = 2000):
         plt.title("knn n={}".format(num_data))
     plt.plot(x_list, p_list)
     
-    
 
+#task 2-1
 def plot_hist_varbin():
     plt.figure(figsize = (8, 8))
     plt.subplot(2, 2, 1)
@@ -174,8 +175,7 @@ def plot_hist_varbin():
     hist(200, 20, "varbin")
     plt.show()    
     
-    
-
+#task 1-1  
 def plot_hist_varn():
     plt.figure(figsize = (8, 8))
     plt.subplot(2, 2, 1)
@@ -187,7 +187,8 @@ def plot_hist_varn():
     plt.subplot(2, 2, 4)
     hist(10000, 20, "varn")
     plt.show()
-    
+
+#task 1-2
 def plot_gauss_varn():
     plt.figure(figsize = (8, 8))
     plt.subplot(2, 2, 1)
@@ -199,7 +200,14 @@ def plot_gauss_varn():
     plt.subplot(2, 2, 4)
     gauss_kernel(10000, 0.5, "varn")
     plt.show()
-    
+
+#task 3-1
+def plot_gauss_besth():
+    plt.figure(figsize = (8, 8))
+    gauss_kernel(100, 0.35)
+    plt.show()
+
+#task 1-3  
 def plot_knn_varn():
     plt.figure(figsize = (8, 8))
     plt.subplot(2, 2, 1)
@@ -213,7 +221,7 @@ def plot_knn_varn():
     plt.show()
 
 
-    
+#task 4-1
 def plot_knn_vark():
     plt.figure(figsize = (8, 8))
     plt.subplot(2, 2, 1)
@@ -225,3 +233,21 @@ def plot_knn_vark():
     plt.subplot(2, 2, 4)
     knn_estimation(200, 100, "vark")
     plt.show()
+
+
+
+if __name__ == "__main__":
+    s = input("")
+    if s == "knn_vark":
+        plot_knn_vark()
+    if s == "knn_varn":
+        plot_knn_varn()
+    if s == "gauss_besth":
+        plot_gauss_besth()
+    if s == "gauss_varn":
+        plot_gauss_varn()
+    if s == "hist_varn":
+        plot_hist_varn()
+    if s == "hist_varbin":
+        plot_hist_varbin()
+
