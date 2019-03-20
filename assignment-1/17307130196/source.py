@@ -185,6 +185,19 @@ def simple_CV(bins,N): #return the result of CV test
         # print(pred)
     return sum_of_squire(pred,sampled_data[0:len(pred)],test_num)
 
+def simple_CV_test(bins,N,i):
+    random.seed(i)
+    test_num=int(N/2)
+    sampled_data = get_data(N)
+    sampled_data_exchange_1=sampled_data[0:int(N/2)]
+    sampled_data_exchange_1.sort()
+    sampled_data_exchange_2=sampled_data[int(N/2):N]
+    sampled_data_exchange_2.sort()
+    size=20/float(bins)
+    pred_distribution_1=Hist_new(int(N/2),sampled_data_exchange_1,bins)
+    pred_distribution_2=Hist_new(int(N/2),sampled_data_exchange_2,bins)
+    return sum_of_squire(pred_distribution_1,pred_distribution_2,len(pred_distribution_1))
+
 def M_HIS(bins):
     N=200
     sample_data=get_data(N)
@@ -238,17 +251,27 @@ def M_k_NN(K):
     return M0
 
 #compute the best bins
-def best_bins_simple_cv():
+def best_bins_simple_cv_error():
     ans=[]
     for i in range(1,200):
         sum=0
         for j in range(1,2):
-            sum=sum+simple_CV(i,1000)
+            sum=sum+simple_CV(i,200)
         # sum=sum/30
         ans.append(sum)
     plt.plot(range(1,200),ans)
     plt.show()
 
+def best_bins_simple_cv():
+    ans=[]
+    for i in range(1,200):
+        sum=0
+        for j in range(1,30):
+            sum=sum+simple_CV_test(i,200,j)
+        sum=sum/30
+        ans.append(sum)
+    plt.plot(range(1,200),ans)
+    plt.show()
 
 #compute the best h
 def best_h():
@@ -324,6 +347,7 @@ def requirement_2():
         main('H',1000,200,20,0.8,x)
     else:
         best_bins_simple_cv()
+        best_bins_simple_cv_error()
 
 ##  REQUIREMENT 3
 def requirement_3():
