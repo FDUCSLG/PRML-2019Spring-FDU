@@ -18,11 +18,6 @@ def histmd(data_num = 200, bin_num = 50):
     plt.show()
 
 
-histmd(100, 30)
-histmd(500, 30)
-histmd(1000, 30)
-histmd(10000, 30)
-
 def kde(sample_data, test_data, h):
 
     p = np.zeros_like(test_data)
@@ -49,12 +44,6 @@ def kde_plt(data_num, spot_num, h):
     gm1d.plot(num_sample=1000)
     plt.show()
 
-
-kde_plt(100, 100, 0.36)
-kde_plt(500, 100, 0.36)
-kde_plt(1000, 100, 0.36)
-kde_plt(10000, 100, 0.36)
-# kde_plt(100, 100, 2)
 
 def cross_validation(data_num, h_min, h_max):
     sample_data = get_data(data_num)
@@ -130,12 +119,6 @@ def knn_plt(data_num, spot_num, k):
     gm1d.plot(num_sample=1000)
     plt.show()
 
-
-knn_plt(100, 100, 10)
-knn_plt(500, 100, 10)
-knn_plt(1000, 100, 10)
-knn_plt(1000, 100, 10)
-# knn_plt(200, 100, 25)
 
 # def bin_test(bin_min = 10, bin_max = 60):
 #     data_num = 200
