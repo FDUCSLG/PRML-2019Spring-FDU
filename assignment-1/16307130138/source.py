@@ -35,7 +35,7 @@ def kernel_density_estimation(points, sample_data, para_h):
 def kde_method(sample_data, para_h):
     left = min(sample_data)
     right = max(sample_data)
-    print(left,right)
+    # print(left,right)
     points_num:int = (int)((right-left)/0.1)
     x = np.linspace(left-1, right+1, points_num)
     plt.plot(x,kernel_density_estimation(x,sample_data,para_h))
@@ -62,7 +62,7 @@ def knn_density_estimation(points, sample_data, k:int=1):
 def knn_method(sample_data, k:int=1):
     left = min(sample_data)
     right = max(sample_data)
-    print(left,right)
+    # print(left,right)
     points_num:int = (int)((right - left)/0.01)
     # points_num = 50
     x = np.linspace(left-1, right+1, points_num)
@@ -74,7 +74,7 @@ def knn_method(sample_data, k:int=1):
 def show_all(sample_data, bins, para_h, k):
     left = min(sample_data)
     right = max(sample_data)
-    print(left,right)
+    # print(left,right)
     points_num:int = (int)((right-left)/0.1)
     points_num = 50
     x = np.linspace(left-1, right+1, points_num)
@@ -238,13 +238,15 @@ def cross_validation(train, test):
 def task3_corss_validation(train,test,h,left,right):
     points_num:int = (int)((right-left)/0.1)
     x = np.linspace(left-1, right+1, points_num)
+#    points_num:int = 500
+#    x = np.linspace(21, 37, points_num)
     train_result = kernel_density_estimation(x,train,h)
     test_result = kernel_density_estimation(x,test,h)
     return cross_validation(train_result,test_result)
     
 
 def task3():
-    sample_data = get_data(100)
+    sample_data = get_data(500)
     n = len(sample_data)
     
 #    for h in range(1,20):
@@ -261,20 +263,25 @@ def task3():
     plt.title("h={}".format(h))
     kde_method(sample_data,h)
     
-    kf = KFold(n_splits = 2)
+    kf = KFold(n_splits = 5)
     mincv = 1000000.0
     minh = 1
-    for h in range(1,100):
+    hlist = [(i/100) for i in range(1,201)]
+    cvlist = []
+    for h in range(1,201):
         h /= 100
         cv = 0.0
         for train,test in kf.split(sample_data):
-            cv += task3_corss_validation(train,test,h,min(sample_data),max(sample_data))
+            cv += task3_corss_validation([sample_data[i] for i in train],[sample_data[i] for i in test],h,min(sample_data),max(sample_data))
+        cvlist.append(cv)
         if cv<mincv:
             mincv = cv
             minh = h
     h = minh
     plt.title("h={}".format(h))
     kde_method(sample_data,h)
+    
+    plt.plot(hlist,cvlist)
     
 def task4_corss_validation(train,test,k,left,right):
     points_num:int = (int)((right-left)/0.01)
@@ -286,25 +293,25 @@ def task4_corss_validation(train,test,k,left,right):
 
 def task4():
     sample_data = get_data(200)
-#    kf = KFold(n_splits = 2)
-#    mincv = 1000000.0
-#    mink = 1
-#    for k in range(1,31):
-#        #plt.title("K={}".format(k))
-#        #knn_method(sample_data, k)
-#        cv = 0.0
-#        for train,test in kf.split(sample_data):
-#            cv += task4_corss_validation(train,test,k,min(sample_data),max(sample_data))
-#        if cv<mincv:
-#            mincv = cv
-#            # print(mincv)
-#            mink = k
-#    k = mink
-    k = int(math.sqrt(len(sample_data)))
+    kf = KFold(n_splits = 2)
+    mincv = 1000000.0
+    mink = 1
+    for k in range(1,31):
+        #plt.title("K={}".format(k))
+        #knn_method(sample_data, k)
+        cv = 0.0
+        for train,test in kf.split(sample_data):
+            cv += task4_corss_validation([sample_data[i] for i in train],[sample_data[i] for i in test],k,min(sample_data),max(sample_data))
+        if cv<mincv:
+            mincv = cv
+            # print(mincv)
+            mink = k
+    k = mink
+    # k = int(math.sqrt(len(sample_data)))
     # k = 15
     plt.title("k={}".format(k))
     knn_method(sample_data,k)
 # task2()
-# task3()
+task3()
 
-task4()
+# task4()
