@@ -1,7 +1,6 @@
 *
-.vscode/
 !.gitignore
-!docs/
+!docs/*
 !/**/
 !*.py
 !report.pdf
