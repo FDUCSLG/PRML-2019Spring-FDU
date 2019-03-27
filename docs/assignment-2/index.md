@@ -92,7 +92,7 @@ One interesting property of the softmax function is that it is invariant to cons
 To sum up, for logistic regression the predicted probability distributions are computed as:
 
 $$
- \mathbf{\hat{y}} = \text{softmax}\left(W\mathbf{x} + \mathbf{b}\right)
+\mathbf{\hat{y}} = \text{softmax}\left(W^{T}\mathbf{x} + \mathbf{b}\right)
 $$
 Because the existence of the softmax function, we could not write a closed solution for the optimization, therefore we will use gradient descent to optimize a loss function, as is typically done in machine learning, we minimize a loss function on top of the prediction of the linear model. Concretely we use the cross entropy loss function defined as
 $$
