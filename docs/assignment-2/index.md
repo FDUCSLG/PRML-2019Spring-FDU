@@ -66,6 +66,8 @@ and you use the vocabulary to map the tokenized document to a multi-hot vector!
 
 as you could verify this is the representation from the above two document.
 
+In practice, the vocabulary dictionary is quite large, which may cause the size of multi-hot vector exceeds the memory limits! To address this problem, you can set a frequency threshold  `min_count` and only consider the words which occur at least `min_count` times in the overall training set. For this problem, `min_count = 10` is suitable.
+
 Once you could represent the document in vectors (and also the category of the document in one-hot representation), then you can use the logistic regression!
 
 Logistic regression is a kind of generalized linear model, the major (or only?) difference between logistic regression and least square is that in logistic regression we use a non-linear function after the linear transformation to enable probabilistic interpretation for the output. For binary classification, the logistic  sigmoid function
