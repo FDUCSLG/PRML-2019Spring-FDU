@@ -28,7 +28,7 @@ In this part of the assignment, you are required to use logistic regression to d
 
 Text classification is about to classify a given document with its corresponding genre, e.g. sports, news, health etc. To represent the document in a convenient way to be processed by the logistic regression, we could represent the document in a multi-hot style vector.
 
-Firstly you will have to tokenize the document into words (or a list of strings), you should firstly ignore all the characters in `string.punctuation` and then make all `string.whitespace` characters a space , and then split the document by all the spaces to have a list of strings. Then you build a vocabulary on all the words in the training dataset, which simply maps each word in the training dataset to a number. For example, 
+Firstly you will have to tokenize the document into words (or a list of strings), you should firstly ignore all the characters in `string.punctuation` and then make all `string.whitespace` characters a space , and then split the document by all the spaces to have a list of strings.  Subsequently, you should convert all characters into lowercase to facilitate future process. Then you build a vocabulary on all the words in the training dataset, which simply maps each word in the training dataset to a number. For example, 
 
 ```python
 docs_toy = [
