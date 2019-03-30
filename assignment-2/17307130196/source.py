@@ -10,7 +10,7 @@ import math as mt;
 import os
 os.sys.path.append('..')
 # use the above line of code to surpass the top module barrier
-from handout import get_linear_seperatable_2d_2c_dataset
+from handout import *
 # Part one
 # two Linear Classification Model based on a given dataset
 # And discuss the accuracy and ways to improve them
@@ -18,10 +18,26 @@ from handout import get_linear_seperatable_2d_2c_dataset
 
 # Least square model
 def LS(X,y): #train dataset X, y
-    X_=np.linalg.inv(X*X.T)
-    return X_*X*y
+    X=X.T
+    X_=np.linalg.inv(np.dot(X,X.T))
+    print(X_)
+    X_X=np.dot(X_,X)
+    print(X_X)
+    return np.dot(X_X,y+0)
 
+dataset=get_linear_seperatable_2d_2c_dataset()
 
+dataset.plot(plt)
+# plt.show()
+print(dataset)
+
+def get_w(dataset):
+    w=LS(dataset.X,dataset.y)
+    return w
+
+w=get_w(dataset)
+
+print(w)
 
 # Perceptron Algorithm
 
