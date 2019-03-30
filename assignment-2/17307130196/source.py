@@ -14,7 +14,7 @@ from nltk.corpus import stopwords
 import nltk
 import collections
 # np.set_printoptions(threshold=np.inf) # prevent ...
-nltk.download('stopwords')
+# nltk.download('stopwords')
 from __init__ import *
 # os.sys.path.append("..")
 # use the above line of code to surpass the top module barrier
@@ -128,13 +128,14 @@ def main_2():
 
 # sortmax to onehot
 def get_onehot(W_c,X): #W_c=d*c X=d*N
-    ori=np.exp(np.dot(W_c.T,X))  #ori=c*N
+    ori=(np.exp(np.dot(W_c.T,X))).T  #ori=c*N
     argmax = np.argmax(ori, axis=1)
     one_hot = np.zeros((len(argmax), ori.shape[1]))
     one_hot [np.arange(len(argmax)), argmax] = 1
-    return one_hot #one_hot=c*N
+    print(one_hot)
+    return one_hot.T #one_hot=c*N
 
-def cross_entropy_gradient(W_c,X,Y): #W_c=d*c X=d*N Y=c*N
+def cross_entropy_gradient(W_c,X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N
     N=X.shape[1]
     Y_tilta=get_onehot(W_c,X) #Y_tilta=c*N
     Y_sub=(Y-Y_tilta).T #Y_sub=N*c
@@ -142,7 +143,7 @@ def cross_entropy_gradient(W_c,X,Y): #W_c=d*c X=d*N Y=c*N
 
 def cross_entropy_train(X,Y):
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=200
+    T=400
     alpha=0.1
     for i in range(0,T):
         W_c+=alpha*cross_entropy_gradient(W_c,X,Y)
@@ -215,14 +216,27 @@ def build_one_hot_target(list_of_target):
 def main_3():
     dataset_train,dataset_test=get_text_classification_datasets()
     target=build_one_hot_target(dataset_train.target)
-    print(target.shape)
-    # C=len(dataset_train.categories)
+    # # C=len(dataset_train.categories)
     one_hot_collections,dictionary=build_dict(dataset_train.data)
-    print(one_hot_collections.shape)
-    W_c=cross_entropy_train(one_hot_collections.T,target.T)
-    print(W_c)
+    X=augment(one_hot_collections).T
+    Y=target.T
+    W_c=cross_entropy_train(X,Y)
+    # print(W_c)
+    result=get_onehot(W_c,X)
+    # print(result.shape)
+    # print(result)
+    # print(Y.shape)
+    ct=0
+    for i in range(0,X.shape[1]):
+        if (result[:,i]==Y[:,i]).all():
+            ct=ct+1
+            print('True')
+        else:
+            print('False')
+    print(float(ct)/float(X.shape[1]))
 
     
+
     # # test here, and with nice answer
     # docs_toy = ["Hi!How are you?","Do you have a dog?"]
     # one_hot_collections,dictionary=build_dict(docs_toy)
