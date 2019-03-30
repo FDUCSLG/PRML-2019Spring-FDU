@@ -13,6 +13,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 import nltk
 import collections
+# np.set_printoptions(threshold=np.inf) # prevent ...
 nltk.download('stopwords')
 from __init__ import *
 # os.sys.path.append("..")
@@ -113,49 +114,42 @@ def main_2():
 
 # main_2()
 
+
+
+
+
+
+
+#=================================================#
+#                      TASK2                      #
+#=================================================#
 # Part two
 # Text classification based on logistic regression.
 
-#main code here
-def softmax(w,x,bottom): #count the p(y=c|C=i)
-    divide=mt.exp(w.T*x)/bottom
-    return divide
+# sortmax to onehot
+def get_onehot(W_c,X): #W_c=d*c X=d*N
+    ori=np.exp(np.dot(W_c.T,X))  #ori=c*N
+    argmax = np.argmax(ori, axis=1)
+    one_hot = np.zeros((len(argmax), ori.shape[1]))
+    one_hot [np.arange(len(argmax)), argmax] = 1
+    return one_hot #one_hot=c*N
 
-def logistic(W_c,x):
-    result=[]
-    bottom=0
+def cross_entropy_gradient(W_c,X,Y): #W_c=d*c X=d*N Y=c*N
+    N=X.shape[1]
+    Y_tilta=get_onehot(W_c,X) #Y_tilta=c*N
+    Y_sub=(Y-Y_tilta).T #Y_sub=N*c
+    return np.dot(X,Y_sub)/N #X_Y=d*c
 
-    for w in W_c:
-        bottom=bottom+mt.exp(w.T*x)
-    
-    for w in W_c:
-        result.append(softmax(w,x,bottom))
-    return np.argmax(result)
-
-#degree
-# W_t, traned parameters
-# alpha, learned speed
-# N, num of data
-# X, the i-th sample
-# Y, output of the model now
-def integrate(W_t,alpha,N,X,Y):
-    sum=0
-    for i in range(0,N):
-        sum=sum+X[i]*(Y[i]-logistic(W_t,X[i])).T
-    W_t=W_t+alpha/N*sum
-    return W_t
+def cross_entropy_train(X,Y):
+    W_c=np.zeros((X.shape[0],Y.shape[0]))
+    T=200
+    alpha=0.1
+    for i in range(0,T):
+        W_c+=alpha*cross_entropy_gradient(W_c,X,Y)
+    return W_c
 
 
-#train progress
-def train(train_data, target):
-    sz=len(train_data)
-    W_0=np.zeros(sz)
-    turns=400
-    for i in range(0,turns):
-        W_0=integrate(W_0,0.01,sz,train_data,target)
-    return W_0
-
-
+# text preprocess
 def remove_punctuation(str):
     str=str.lower()
     for c in string.punctuation:
@@ -190,7 +184,7 @@ def build_dict(list_of_papers):
         # pre-
         words_exist=remove_punctuation(paper)
         words_list=words_exist.split()
-        # words_list=remove_stopwords(words_list)
+        words_list=remove_stopwords(words_list)
         # add into the all
         papers.append(words_list) 
         words_all+=words_list
@@ -199,7 +193,7 @@ def build_dict(list_of_papers):
     dictionary = collections.Counter(words_all)
     i=0
     for word in remove_dup:
-        if dictionary[word]<0:
+        if dictionary[word]<10:
             del dictionary[word]
         else:
             dictionary[word]=i
@@ -210,19 +204,31 @@ def build_dict(list_of_papers):
         one_hot_collections=np.row_stack((one_hot_collections,build_one_hot(dictionary,words_list)))
     return np.delete(one_hot_collections,0,0), dictionary
 
+# turn target into one-hot
+def build_one_hot_target(list_of_target):
+    sz = len(set(list_of_target))
+    target=np.zeros((len(list_of_target),sz))
+    for i in range(len(list_of_target)):
+        target[i][list_of_target[i]]=1
+    return target
 
 def main_3():
     dataset_train,dataset_test=get_text_classification_datasets()
-    target=dataset_train.target
-    
+    target=build_one_hot_target(dataset_train.target)
+    print(target.shape)
+    # C=len(dataset_train.categories)
     one_hot_collections,dictionary=build_dict(dataset_train.data)
+    print(one_hot_collections.shape)
+    W_c=cross_entropy_train(one_hot_collections.T,target.T)
+    print(W_c)
+
     
     # # test here, and with nice answer
     # docs_toy = ["Hi!How are you?","Do you have a dog?"]
     # one_hot_collections,dictionary=build_dict(docs_toy)
     # print(one_hot_collections)
     
-    
+
 
 
 main_3()
