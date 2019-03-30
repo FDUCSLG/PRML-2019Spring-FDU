@@ -20,24 +20,34 @@ from handout import *
 def LS(X,y): #train dataset X, y
     X=X.T
     X_=np.linalg.inv(np.dot(X,X.T))
-    print(X_)
+    # print(X_)
     X_X=np.dot(X_,X)
-    print(X_X)
+    # print(X_X)
     return np.dot(X_X,y+0)
 
-dataset=get_linear_seperatable_2d_2c_dataset()
 
-dataset.plot(plt)
-# plt.show()
-print(dataset)
+def main_1():
+    dataset=get_linear_seperatable_2d_2c_dataset()
+    dataset.plot(plt)
+    sz=len(dataset.X)
 
-def get_w(dataset):
-    w=LS(dataset.X,dataset.y)
-    return w
+    # augment
+    X=dataset.X.T
+    newX=np.append(X,[np.ones(sz)],axis=0)
+    newX=newX.T
+    y=dataset.y
 
-w=get_w(dataset)
+    #compute
+    w=LS(newX,y)
+    
+    # show
+    x_=[-1,1]
+    y_=[(0.5-w[2]-w[0]*x_[0])/w[1],(0.5-w[2]-w[0]*x_[1])/w[1]]
+    plt.plot(x_,y_)
+    print(w)
+    plt.show()
 
-print(w)
+main_1()
 
 # Perceptron Algorithm
 
