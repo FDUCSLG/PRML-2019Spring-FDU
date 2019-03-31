@@ -8,8 +8,6 @@ import numpy as np
 import math as mt
 import string
 import os
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 import nltk
 import collections
@@ -19,6 +17,10 @@ from __init__ import *
 # os.sys.path.append("..")
 # use the above line of code to surpass the top module barrier
 # from handout import *
+
+#=================================================#
+#                      TASK1                      #
+#=================================================#
 # Part one
 # two Linear Classification Model based on a given dataset
 # And discuss the accuracy and ways to improve them
@@ -62,6 +64,10 @@ def main_1():
 
 # main_1()
 
+
+#=================================================#
+#                      TASK2                      #
+#=================================================#
 # Perceptron Algorithm
 def perceptron(X,y):
     sz=len(X)
@@ -116,12 +122,8 @@ def main_2():
 
 
 
-
-
-
-
 #=================================================#
-#                      TASK2                      #
+#                      TASK3                      #
 #=================================================#
 # Part two
 # Text classification based on logistic regression.
@@ -135,20 +137,34 @@ def get_onehot(W_c,X): #W_c=d*c X=d*N
     print(one_hot)
     return one_hot.T #one_hot=c*N
 
-def cross_entropy_gradient(W_c,X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N
+def cross_entropy_gradient(W_c,X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
+    #W_c=(d+1)*c x=(d+1)*1 y=c*1 when stochastic gradient descent train
     N=X.shape[1]
     Y_tilta=get_onehot(W_c,X) #Y_tilta=c*N
     Y_sub=(Y-Y_tilta).T #Y_sub=N*c
     return np.dot(X,Y_sub)/N #X_Y=d*c
 
-def cross_entropy_train(X,Y):
+def normal_gradient_descent_train(X,Y):
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=400
-    alpha=0.1
+    T=100
+    alpha=0.01
     for i in range(0,T):
         W_c+=alpha*cross_entropy_gradient(W_c,X,Y)
     return W_c
 
+def stochastic_gradient_descent_train(X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
+    W_c=np.zeros((X.shape[0],Y.shape[0]))
+    T=50
+    alpha=0.01
+    N=X.shape[1]
+    for i in range(0,T):
+        order=np.random.permutation(N)
+        for j in order:
+            W_c+=alpha*cross_entropy_gradient(W_c,X[j],Y[j])/N
+    return W_c
+
+def batched_gradient_descent_train(X,Y):
+    #TODO
 
 # text preprocess
 def remove_punctuation(str):
@@ -213,19 +229,23 @@ def build_one_hot_target(list_of_target):
         target[i][list_of_target[i]]=1
     return target
 
-def main_3():
+def main_3(model):
     dataset_train,dataset_test=get_text_classification_datasets()
     target=build_one_hot_target(dataset_train.target)
     # # C=len(dataset_train.categories)
     one_hot_collections,dictionary=build_dict(dataset_train.data)
     X=augment(one_hot_collections).T
     Y=target.T
-    W_c=cross_entropy_train(X,Y)
-    # print(W_c)
+    W_c=[]
+    if model==1:
+        W_c=normal_gradient_descent_train(X,Y)
+    elif model==2:
+        W_c=stochastic_gradient_descent_train(X,Y)  
+    else:
+        W_c=batched_gradient_descent_train(X,Y)
+    
+    print(W_c)
     result=get_onehot(W_c,X)
-    # print(result.shape)
-    # print(result)
-    # print(Y.shape)
     ct=0
     for i in range(0,X.shape[1]):
         if (result[:,i]==Y[:,i]).all():
@@ -243,6 +263,15 @@ def main_3():
     # print(one_hot_collections)
     
 
+main_3(1)
 
 
-main_3()
+# TODO list 
+# write down how to comput the gradient
+# L2 regularization, should regularize the bias term?
+# how to check the correctness
+# plot loss curve
+# how to decide the learning rate
+# when to determinate the train
+# compare three descent methods, about pros and cons
+# report the three different model
