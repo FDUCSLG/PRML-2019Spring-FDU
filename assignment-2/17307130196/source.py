@@ -128,52 +128,56 @@ def main_2():
 # Part two
 # Text classification based on logistic regression.
 
-lamda=0.1
+lamda=1
 alpha=0.1
 
 # softmax to onehot
 def get_onehot(W_c,X): #W_c=d*c X=d*N
-    ori=(np.exp(np.dot(W_c.T,X))).T  #ori=c*N
+    ori=np.exp(np.dot(W_c.T,X)) #ori=c*N
+    ori=ori.T
     argmax = np.argmax(ori, axis=1)
     one_hot = np.zeros((len(argmax), ori.shape[1]))
     one_hot [np.arange(len(argmax)), argmax] = 1
-    print(one_hot)
+    # print(one_hot)
     return one_hot.T #one_hot=c*N
 
 def cross_entropy_gradient(W_c,X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
     #W_c=(d+1)*c x=(d+1)*1 y=c*1 when stochastic gradient descent train
-    Y_tilta=get_onehot(W_c,X,N) #Y_tilta=c*N
+    Y_tilta=get_onehot(W_c,X) #Y_tilta=c*N
     Y_sub=(Y-Y_tilta).T
     return np.dot(X,Y_sub) #X_Y=d*c
 
-def normal_gradient_descent_train(X,Y):
+def normal_gradient_descent_train(X,Y,T):
     W_c=np.zeros((X.shape[0],Y.shape[0]))
+    step_error=[]
     N=X.shape[1]
-    T=50
     for i in range(0,T):
         W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X,Y)/N
-    return W_c
+        step_error.append(test(W_c,X,Y))
+    return W_c,step_error
 
-def stochastic_gradient_descent_train(X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
+def stochastic_gradient_descent_train(X,Y,T): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=3
     N=X.shape[1]
+    step_error=[]
     for i in range(0,T):
         order=np.random.permutation(N)
         for j in order:
             x=(np.array([X[:,j]])).T
             y=(np.array([Y[:,j]])).T
             W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,x,y)
+            step_error.append(test(W_c,X,Y))
+    return W_c,step_error
 
 def batched_gradient_descent_train(X,Y,k): #k marks the num of train data
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=100000
+    T=10000
     N=X.shape[1]
     for i in range(0,T):
         order=np.random.randint(0,N)
-        X_cmp=X[order,min(order+k,N)] #X_cmp=(d+1)*k
-        Y_cmp=Y[order,min(order+k,N)]
-        W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X_cmp,Y_cmp,1)/N
+        X_cmp=X[:,order:min(order+k,N-1)] #X_cmp=(d+1)*k
+        Y_cmp=Y[:,order:min(order+k,N-1)]
+        W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X_cmp,Y_cmp)/N
     return W_c
 
 # text preprocess
@@ -245,35 +249,44 @@ def test(W_c,X,Y):
     for i in range(0,X.shape[1]):
         if (result[:,i]==Y[:,i]).all():
             ct=ct+1
-            print('True')
-        else:
-            print('False')
+            # print('True')
+        # else:
+        #     print("False!")
     return (float(ct)/float(X.shape[1]))
 
-def main_3(model):
+def build_env():
     dataset_train,dataset_test=get_text_classification_datasets()
     target=build_one_hot_target(dataset_train.target)
     # # C=len(dataset_train.categories)
     one_hot_collections,dictionary=build_dict(dataset_train.data)
     X=augment(one_hot_collections).T
     Y=target.T
-    W_c=[]
+    np.savetxt('X.txt',X)
+    np.savetxt('Y.txt',Y)
+    # return X,Y
+
+def main_3(model,T):
+    X=np.loadtxt('X.txt')
+    Y=np.loadtxt('Y.txt')
+
     if model==1:
-        W_c=normal_gradient_descent_train(X,Y)
+        W_c,step_error=normal_gradient_descent_train(X,Y,T)
     elif model==2:
-        W_c=stochastic_gradient_descent_train(X,Y)  
+        W_c,step_error=stochastic_gradient_descent_train(X,Y,T)  
     else:
         k=3
         W_c=batched_gradient_descent_train(X,Y,k)
     # print(W_c)
-    print(test(W_c,X,Y))
+
+    plt.plot(range(0,len(step_error)),step_error)
+    plt.show()
     # # test here, and with nice answer
     # docs_toy = ["Hi!How are you?","Do you have a dog?"]
     # one_hot_collections,dictionary=build_dict(docs_toy)
     # print(one_hot_collections)
-    
 
-main_3(2)
+
+# main_3(2)
 
 
 # TODO list 
