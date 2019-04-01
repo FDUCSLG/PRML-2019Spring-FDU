@@ -128,7 +128,10 @@ def main_2():
 # Part two
 # Text classification based on logistic regression.
 
-# sortmax to onehot
+lamda=0.1
+alpha=0.1
+
+# softmax to onehot
 def get_onehot(W_c,X): #W_c=d*c X=d*N
     ori=(np.exp(np.dot(W_c.T,X))).T  #ori=c*N
     argmax = np.argmax(ori, axis=1)
@@ -139,32 +142,39 @@ def get_onehot(W_c,X): #W_c=d*c X=d*N
 
 def cross_entropy_gradient(W_c,X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
     #W_c=(d+1)*c x=(d+1)*1 y=c*1 when stochastic gradient descent train
-    N=X.shape[1]
-    Y_tilta=get_onehot(W_c,X) #Y_tilta=c*N
-    Y_sub=(Y-Y_tilta).T #Y_sub=N*c
-    return np.dot(X,Y_sub)/N #X_Y=d*c
+    Y_tilta=get_onehot(W_c,X,N) #Y_tilta=c*N
+    Y_sub=(Y-Y_tilta).T
+    return np.dot(X,Y_sub) #X_Y=d*c
 
 def normal_gradient_descent_train(X,Y):
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=100
-    alpha=0.01
+    N=X.shape[1]
+    T=50
     for i in range(0,T):
-        W_c+=alpha*cross_entropy_gradient(W_c,X,Y)
+        W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X,Y)/N
     return W_c
 
 def stochastic_gradient_descent_train(X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=50
-    alpha=0.01
+    T=3
     N=X.shape[1]
     for i in range(0,T):
         order=np.random.permutation(N)
         for j in order:
-            W_c+=alpha*cross_entropy_gradient(W_c,X[j],Y[j])/N
-    return W_c
+            x=(np.array([X[:,j]])).T
+            y=(np.array([Y[:,j]])).T
+            W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,x,y)
 
-def batched_gradient_descent_train(X,Y):
-    #TODO
+def batched_gradient_descent_train(X,Y,k): #k marks the num of train data
+    W_c=np.zeros((X.shape[0],Y.shape[0]))
+    T=100000
+    N=X.shape[1]
+    for i in range(0,T):
+        order=np.random.randint(0,N)
+        X_cmp=X[order,min(order+k,N)] #X_cmp=(d+1)*k
+        Y_cmp=Y[order,min(order+k,N)]
+        W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X_cmp,Y_cmp,1)/N
+    return W_c
 
 # text preprocess
 def remove_punctuation(str):
@@ -229,6 +239,17 @@ def build_one_hot_target(list_of_target):
         target[i][list_of_target[i]]=1
     return target
 
+def test(W_c,X,Y):
+    result=get_onehot(W_c,X)
+    ct=0
+    for i in range(0,X.shape[1]):
+        if (result[:,i]==Y[:,i]).all():
+            ct=ct+1
+            print('True')
+        else:
+            print('False')
+    return (float(ct)/float(X.shape[1]))
+
 def main_3(model):
     dataset_train,dataset_test=get_text_classification_datasets()
     target=build_one_hot_target(dataset_train.target)
@@ -242,28 +263,17 @@ def main_3(model):
     elif model==2:
         W_c=stochastic_gradient_descent_train(X,Y)  
     else:
-        W_c=batched_gradient_descent_train(X,Y)
-    
-    print(W_c)
-    result=get_onehot(W_c,X)
-    ct=0
-    for i in range(0,X.shape[1]):
-        if (result[:,i]==Y[:,i]).all():
-            ct=ct+1
-            print('True')
-        else:
-            print('False')
-    print(float(ct)/float(X.shape[1]))
-
-    
-
+        k=3
+        W_c=batched_gradient_descent_train(X,Y,k)
+    # print(W_c)
+    print(test(W_c,X,Y))
     # # test here, and with nice answer
     # docs_toy = ["Hi!How are you?","Do you have a dog?"]
     # one_hot_collections,dictionary=build_dict(docs_toy)
     # print(one_hot_collections)
     
 
-main_3(1)
+main_3(2)
 
 
 # TODO list 
