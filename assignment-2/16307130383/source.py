@@ -4,6 +4,7 @@ from handout import get_linear_seperatable_2d_2c_dataset, get_text_classificatio
 import numpy as np
 import matplotlib.pyplot as plt
 import string
+import re
 
 #------------
 # Part 1
@@ -51,17 +52,31 @@ def data_preprocess():
   train, test = get_text_classification_datasets()
   # build vacabulary
   train_item = []
+  word_count = {}
   vacab = {}
   regular = re.compile(r'[\s]+')
   for item in train.data:
     words = regular.split( item.translate( str.maketrans('', '', string.punctuation) ).lower() )
     train_item.append(words)
     for word in words:
-      if not word in vacab:
-        vacab[word] = len(vacab)
+      if word in word_count:
+        word_count[word] += 1
+      else:
+        word_count[word] = 1
+  for word, count in word_count.items():
+    if count >= 10:  # only record those >= 10 times
+      vacab[word] = len(vacab)
+  return train, test, vacab
+
+def get_multi_hot(data, vacab):
+  regular = re.compile(r'[\s]+')
+  data_item = []
+  for item in data.data:
+    words = regular.split( item.translate( str.maketrans('', '', string.punctuation) ).lower() )
+    data_item.append(words)
   # build multi-hot
   X = []
-  for words in train_item:
+  for words in data_item:
     x = [1] + [0] * len(vacab)  # [1, 0, 0 ... 0]
     for word in words:
       if word in vacab:
@@ -70,16 +85,14 @@ def data_preprocess():
         print('"{}" not in vacabulary!'.format(word))
     X.append(x)  # append one record
   X = np.array(X)
-
+  # T matrix
   T = []
-  for target in train.target:
+  for target in data.target:
     t = [0] * 4
     t[target] = 1
     T.append(t)
   T = np.array(T)
-
-  W = np.array([ [0.01]*(D+1) ]*K)
-  return X, T, W
+  return X, T
 
 def softmax(Y):
   for (i, y) in enumerate(Y):
@@ -118,10 +131,12 @@ def compute_loss(X, T, Y):
 def det_derivative():
   pass
 
-def logistic_regression():
-  X, T, W = data_preprocess()
+def logistic_regression(X, T):
+  K = len(T[0])
+  D = len(X[0]) - 1
   W = np.array([ [0.01]*(D+1) ]*K)
-  step = 50
+  # start to train
+  step = 100
   plot_y = []
   plot_x = [i for i in range(step)]
   a = 0.0001
@@ -131,6 +146,15 @@ def logistic_regression():
     dEW = compute_dew(X, T, Y)
     W -= a * dEW
     print('-----------')
-    print(compute_y(X, W))
+    print(Y)
+  plt.xlabel('step')
+  plt.ylabel('loss')
   plt.plot(plot_x, plot_y)
   plt.show()
+  return W
+
+def train_and_test():
+  train, test, vacab = data_preprocess()
+  X, T = get_multi_hot(train, vacab)
+  W = logistic_regression(X, T)
+  return W
