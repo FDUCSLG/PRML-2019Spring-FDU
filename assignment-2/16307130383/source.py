@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import string
 import re
+from random import randint
 
 #------------
 # Part 1
@@ -123,6 +124,10 @@ def compute_dew(X, T, Y):
   dEW = (Y - T).transpose() @ X
   return dEW
 
+def compute_dew_part(X, T, Y, i, j):
+  dEW = ( (Y - T)[i:j] ).transpose() @ X[i:j]
+  return dEW
+
 def compute_loss(X, T, Y):
   N = len(X)
   loss = -( T*np.log(Y) ).sum()
@@ -131,15 +136,15 @@ def compute_loss(X, T, Y):
 def det_derivative():
   pass
 
-def logistic_regression(X, T):
+def full_logistic_regression(X, T, step, a):
   K = len(T[0])
   D = len(X[0]) - 1
   W = np.array([ [0.01]*(D+1) ]*K)
   # start to train
-  step = 100
+  # step = 100
   plot_y = []
   plot_x = [i for i in range(step)]
-  a = 0.0001
+  # a = 0.0001
   for i in range(step):
     Y = compute_y(X, W)
     plot_y.append(compute_loss(X, T, Y))
@@ -149,12 +154,71 @@ def logistic_regression(X, T):
     print(Y)
   plt.xlabel('step')
   plt.ylabel('loss')
+  plt.title('Full Batch Logistic Regression\nstep = {}   rate = {}'.format(step, a))
   plt.plot(plot_x, plot_y)
   plt.show()
   return W
 
-def train_and_test():
+def batched_logistic_regression(X, T, step, a, partition):
+  N = len(X)
+  K = len(T[0])
+  D = len(X[0]) - 1
+  W = np.array([ [0.01]*(D+1) ]*K)
+  # start to train
+  plot_y = []
+  plot_x = [i for i in range(step)]
+  for i in range(step):
+    p_l = (i * partition) % N
+    p_r = p_l + partition
+    Y = compute_y(X, W)
+    dEW = compute_dew_part(X, T, Y, p_l, p_r)
+    W -= a * dEW
+    plot_y.append(compute_loss(X, T, Y))
+    print('-----------')
+    print(Y)
+  plt.xlabel('step')
+  plt.ylabel('loss')
+  plt.title('Batched Logistic Regression\nstep = {}   rate = {}   partition = {}'.format(step, a, partition))
+  plt.plot(plot_x, plot_y)
+  plt.show()
+  return W
+
+def one_logistic_regression(X, T, step, a):
+  N = len(X)
+  K = len(T[0])
+  D = len(X[0]) - 1
+  W = np.array([ [0.01]*(D+1) ]*K)
+  # start to train
+  plot_y = []
+  plot_x = [i for i in range(step)]
+  for i in range(step):
+    j = randint(0, N-1)
+    Y = compute_y(X, W)
+    dEW = compute_dew_part(X, T, Y, j, j+1)
+    W -= a * dEW
+    plot_y.append(compute_loss(X, T, Y))
+    print('-----------')
+    print(Y)
+  plt.xlabel('step')
+  plt.ylabel('loss')
+  plt.title('Stochastic Logistic Regression\nstep = {}   rate = {}'.format(step, a))
+  plt.plot(plot_x, plot_y)
+  plt.show()
+  return W
+
+def train_model(step, a, partition):
   train, test, vacab = data_preprocess()
   X, T = get_multi_hot(train, vacab)
-  W = logistic_regression(X, T)
-  return W
+  W = batched_logistic_regression(X, T, step, a, partition)  # 1000, 0.0001, 10
+  return train, test, vacab, W
+
+def test_model(Xtest, Ttest, W):
+  Ytest = compute_y(Xtest, W)
+  correct = 0
+  wrong = 0
+  for (y, t) in zip(Ytest, Ttest):
+    if np.argmax(y) == np.argmax(t):  # if classification is right
+      correct += 1
+    else:
+      wrong +=1
+  return correct, wrong
