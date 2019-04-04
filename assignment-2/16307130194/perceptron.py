@@ -40,7 +40,8 @@ class Perceptron:
 
     def plot(self):
         x_min, x_max = -1.5, 1.5
-        plt.plot([x_min, x_max], [(-self.b-self.w[0]*x_min)/self.w[1], (-self.b-self.w[0]*x_max)/self.w[1]])
+        plt.plot([x_min, x_max], [(-self.b-self.w[0]*x_min)/self.w[1], (-self.b-self.w[0]*x_max)/self.w[1]], label="perceptron")
+        plt.legend()
         self.d.plot(plt).show()
 
     def accuracy(self):
@@ -51,6 +52,6 @@ class Perceptron:
         self.accuracy()
         self.plot()
 
-
+print("Perceptron:")
 perceptron = Perceptron(get_linear_seperatable_2d_2c_dataset())
 perceptron.run()

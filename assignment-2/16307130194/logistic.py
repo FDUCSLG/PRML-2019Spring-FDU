@@ -57,7 +57,18 @@ class Logistic:
         dataset[np.arange(len(y_data)), y_data] = 1
         return dataset
 
+    def softmax(self, z):
+        z = z - np.min(z, axis=1)
+        return np.exp(z) / (np.sum(np.exp(z), axis=1))
 
+    def loss(self, w_, lamb=0.5):
+        y_pred = self.softmax(w_ @ self.X_train)
+        return - np.trace(self.y * np.log(y_pred)) / len(self.X_train) + lamb * np.sum(w_ * w_)
+
+
+
+
+print("Logistic regression:")
 dataset_train, dataset_test = get_text_classification_datasets()
 logistic = Logistic(dataset_train, dataset_test)
 

@@ -26,7 +26,8 @@ class LSM:
 
     def plot(self):
         x_min, x_max = -1.5, 1.5
-        plt.plot([x_min, x_max], [(0.5-self.b-self.w[0]*x_min)/self.w[1], (0.5-self.b-self.w[0]*x_max)/self.w[1]])
+        plt.plot([x_min, x_max], [(0.5-self.b-self.w[0]*x_min)/self.w[1], (0.5-self.b-self.w[0]*x_max)/self.w[1]], label="least square model")
+        plt.legend()
         self.d.plot(plt).show()
 
     def accuracy(self):
@@ -37,6 +38,6 @@ class LSM:
         self.accuracy()
         self.plot()
 
-
+print("Least square model:")
 lsm = LSM(get_linear_seperatable_2d_2c_dataset())
 lsm.run()
