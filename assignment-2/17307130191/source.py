@@ -9,16 +9,19 @@ import re
 import string
 import math
 import copy
+import random
 
 sampled_data = get_linear_seperatable_2d_2c_dataset()
-sampled_data.plot(plt)
+train, test = get_text_classification_datasets()
+#sampled_data.plot(plt)
 X = np.column_stack((np.ones(200), np.array(sampled_data.X)))
-alpha = 0.02
-beta = 10
-gama = 0.1
-penal = 0.01
+alpha = 0.02 #learning rate
+beta = 10 # threshold
+gama = 0.03 # learning rate
+penal = 0.01 #lambda
 map = dict()
-acc = 0.0001
+acc = 1e-3 #accuracy |loss1 - loss2|
+check_time = 20 #gradient checking time
 
 def Lq():
     T = np.zeros((200, 2))
@@ -52,7 +55,6 @@ def Lq():
     plt.plot(x, z, color = 'blue')
 
 def Perceptron():
-    print('hello')
     w = np.array([[0.1],[1],[1]])
     loss2 = loss1 = 0
     Tn = np.zeros(200)
@@ -63,7 +65,6 @@ def Perceptron():
 
     selected = []
     for i in range(len(X)):
-        print(i, X[i], Tn[i], np.dot(X[i], w) * Tn[i])
         if(np.dot(X[i], w) * Tn[i] < 0):
             loss1 += -np.dot(X[i], w) * Tn[i]
             selected.append(i)
@@ -77,10 +78,8 @@ def Perceptron():
         if(np.dot(X[i], w) * Tn[i] < 0):
             loss2 += -np.dot(X[i], w) * Tn[i]
 
-    print('loss1: ', loss1, 'loss2: ', loss2)
 
     while loss2 < loss1:
-        print('loss1: ', loss1, ' loss2: ', loss2, ' w: ', w)
         selected = [i for i in range(len(X)) if np.dot(X[i], w) * Tn[i]  < 0]
         for i in selected:
             for j in range(len(w)):
@@ -118,7 +117,6 @@ def preprocess(train):
     newone = []
     for i in range(len(train_set)): #union
         newone.append(re.split(r' +', train_set[i].strip().lower()))
-    #print(newone)
     return newone
 
 def softmax(z):
@@ -152,15 +150,194 @@ def diction(newone1):
         num += 1
     return num
 
+def gradient_check(w, r, Train):
+    Loss2 = Loss1 = 0
+    pred1 = np.zeros((check_time, 4))
+    pred2 = np.zeros((check_time, 4))
+    lenth = len(Train[0])
+    w1 = copy.deepcopy(w)
+    b = copy.deepcopy(r)
+
+    epsi = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
+    error = np.zeros(len(epsi))
+    for epsilon in epsi:
+        for i in range(check_time):
+            w2 = copy.deepcopy(w1)
+
+            xi, yi = random.randint(0, 3), random.randint(0, lenth - 1)
+            w2[xi][yi] += epsilon
+            z2 = np.dot(w2, Train[i]) + b
+            z1 = np.dot(w1, Train[i]) + b
+
+            pred1[i] = softmax(z1)
+            pred2[i] = softmax(z2)
+
+            soft1 = copy.deepcopy(pred1[i])
+            soft1[train.target[i]] -= 1
+
+            soft2 = copy.deepcopy(pred2[i])
+            soft2[train.target[i]] -= 1
+
+            Loss1 = -np.log(pred1[i][train.target[i]]) + 0.5 * penal * np.sum(w1 * w1)
+            Loss2 = -np.log(pred2[i][train.target[i]]) + 0.5 * penal * np.sum(w2 * w2)
+
+            w1 -= gama * (penal * w1 + np.dot(np.mat(soft1).T, np.mat(Train[i])))
+            b -= gama * soft1
+
+            error[epsi.index(epsilon)] += abs(((soft1[xi] * Train[i][yi] + penal * w1[xi][yi] - (Loss2 - Loss1) / epsilon)) / ((Loss2 - Loss1) / epsilon))
+
+        error[epsi.index(epsilon)] /= check_time
+    ax = plt.axes(xscale = 'log', yscale = 'log')
+    ax.plot(epsi, error)
+    ax.set_xlabel('epsilon')
+    ax.set_ylabel('error')
+    print(epsi, error)
+
+def rate(Train, pred1, w1, b1, loss1, loss2):
+    rate = [1e-3, 1e-2, 3e-2, 5e-2, 1e-1]
+    for gama in rate:
+        epoch = 0
+        cycle = []
+        Loss = []
+        pred = copy.deepcopy(pred1)
+        w = copy.deepcopy(w1)
+        b = copy.deepcopy(b1)
+        Loss1 = loss1
+        Loss2 = loss2
+        cycle.append(epoch)
+        Loss.append(Loss1)
+        while abs(Loss1 - Loss2) > acc:
+            epoch += 1
+            cycle.append(epoch)
+            for i in range(len(Train)):
+                z = np.dot(w, Train[i]) + b
+                pred[i] = softmax(z)
+                soft = copy.deepcopy(pred[i])
+                soft[train.target[i]] -= 1
+                w -= gama * (penal * w + np.dot(np.mat(soft).T, np.mat(Train[i])))
+                b -= gama * soft
+
+            Loss2 = Loss1
+            Loss1 = 0
+            for i in range(len(Train)):
+                Loss1 -= np.log(pred[i][train.target[i]])
+            Loss1 = Loss1 / len(Train) + 0.5 * penal * np.sum(w * w)
+            Loss.append(Loss1)
+        plt.plot(cycle, Loss)
+        plt.ylabel('Loss')
+        plt.ylim([0, 2])
+        plt.show()
+        print(epoch)
+
+def stochastic(Train, Test, pred1, w1, b1, Loss1, Loss2):
+    pred = copy.deepcopy(pred1)
+    w = copy.deepcopy(w1)
+    b = copy.deepcopy(b1)
+    epoch = 0
+    while abs(Loss1 - Loss2) > acc:
+        epoch += 1
+        Loss2 = Loss1
+        Loss1 = 0
+        for i in range(len(Train)):
+            z = np.dot(w, Train[i]) + b
+            pred[i] = softmax(z)
+            soft = copy.deepcopy(pred[i])
+            soft[train.target[i]] -= 1
+            w -= gama * (penal * w + np.dot(np.mat(soft).T, np.mat(Train[i])))
+            b -= gama * soft
+            Loss1 -= np.log(pred[i][train.target[i]])
+        Loss1 = Loss1 / len(Train) + 0.5 * penal * np.sum(w * w)
+
+    print("stochastic:", epoch)
+    Verify(Train, w, b, 0)
+    Verify(Test, w, b, 1)
+
+def full_batched(Train, Test, pred1, w1, b1, Loss1, Loss2):
+    pred = copy.deepcopy(pred1)
+    w = copy.deepcopy(w1)
+    b = copy.deepcopy(b1)
+    epoch = 0
+    soft = np.zeros((len(Train), 4))
+    z = np.zeros(4)
+    for i in range(len(Train)):
+        z = np.dot(w, Train[i]) + b
+        pred[i] = softmax(z)
+        soft[i] = pred[i]
+        soft[i][train.target[i]] -= 1
+
+    while abs(Loss1 - Loss2) > acc:
+        epoch += 1
+        print(Loss2, Loss1)
+        Loss2 = Loss1
+
+        Loss1 = 0
+        w -= gama * (np.dot(np.mat(soft).T, np.mat(Train)) + penal * w)
+        b -= gama * np.sum(soft)
+        for i in range(len(Train)):
+            z = np.dot(w, Train[i]) + b
+            pred[i] = softmax(z)
+            soft[i] = pred[i]
+            soft[i][train.target[i]] -= 1
+            if pred[i][train.target[i]] == 0:
+                pred[i][train.target[i]] = 3e-253
+            Loss1 -= np.log(pred[i][train.target[i]])
+        Loss1 = Loss1 / len(Train) + 0.5 * penal * np.sum(w * w)
+    print("full_batched:", epoch)
+    Verify(Train, w, b, 0)
+    Verify(Test, w, b, 1)
+
+def batched(Train, Test, pred1, w1, b1, Loss1, Loss2, k):
+    pred = copy.deepcopy(pred1)
+    w = copy.deepcopy(w1)
+    b = copy.deepcopy(b1)
+    epoch = 0
+    soft = np.zeros((k, 4))
+    while abs(Loss1 - Loss2) > acc:
+        epoch += 1
+        Loss2 = Loss1
+        print(Loss1, Loss2)
+        Loss1 = 0
+        for i in range(len(Train)):
+            z = np.dot(w, Train[i]) + b
+            pred[i] = softmax(z)
+            soft[i % k] = pred[i]
+            soft[i % k][train.target[i]] -= 1
+            if i % k == 0 and i != 0:
+                for j in range(i - k, i):
+                    w -= gama * (penal * w + np.dot(np.mat(soft[j % k]).T, np.mat(Train[i])))
+                b -= np.sum(soft)
+            Loss1 -= np.log(pred[i][train.target[i]])
+        Loss1 = Loss1 / len(Train) + 0.5 * penal * np.sum(w * w)
+
+    print("batched:", epoch)
+    Verify(Train, w, b, 0)
+    Verify(Test, w, b, 1)
+
+def Verify(Train, w, b, num):
+    sum = 0
+    pred_t = np.zeros(4)
+    z = np.zeros(4)
+    lenth = 0
+    if num == 0:
+        Valid = train
+        lenth = len(train.data)
+    else :
+        Valid = test
+        lenth = len(test.data)
+    for i in range(len(Train)):
+        z = np.dot(w, Train[i]) + b
+        pred_t = softmax(z)
+        if(pred_t.tolist().index(max(pred_t)) == Valid.target[i]):
+            sum += 1
+
+    print(sum, lenth, sum / lenth)
+
 def Logistic():
-    train, test = get_text_classification_datasets()
     newone1 = preprocess(train)
     newone2 = preprocess(test)
-
     num = diction(newone1)
 
     Train = []
-
     for i in range(len(newone1)):
         tmp = np.zeros(num)
         for j in range(len(newone1[i])):
@@ -169,7 +346,6 @@ def Logistic():
         Train.append(tmp)
 
     Test = []
-
     for i in range(len(newone2)):
         tmp = np.zeros(num)
         for j in range(len(newone2[i])):
@@ -177,10 +353,8 @@ def Logistic():
                 tmp[map[newone2[i][j]]] = 1
         Test.append(tmp)
 
-    w = np.ones((4, num))
-    b = np.ones(4)
-    #print(Train, len(Train[0]))
-
+    w = np.zeros((4, num))
+    b = np.zeros(4)
     pred = np.zeros((len(Train), 4))
     z = np.zeros(4)
 
@@ -189,53 +363,17 @@ def Logistic():
         z = np.dot(w, Train[i]) + b
         pred[i] = softmax(z)
 
-    #print(pred)
     for i in range(len(Train)):
         Loss1 -= np.log(pred[i][train.target[i]])
     Loss1 = Loss1 / len(Train) + 0.5 * penal * np.sum(w * w)
 
-    cycle = 0
-    while abs(Loss1 - Loss2) > acc:
-        cycle += 1
-        #print(Loss1, Loss2)
-        for i in range(len(Train)):
-            z = np.dot(w, Train[i]) + b
-            #print(z)
-            pred[i] = softmax(z)
-            soft = copy.deepcopy(pred[i])
-            soft[train.target[i]] -= 1
-            w -= gama * (penal * w + np.dot(np.mat(soft).T, np.mat(Train[i])))
-            b -= gama * soft
+    #gradient_check(w, b, Train)
+    #rate(Train, pred, w, b, Loss1, Loss2)
+    #stochastic(Train, Test, pred, w, b, Loss1, Loss2)
+    #full_batched(Train, Test, pred, w, b, Loss1, Loss2)
+    batched(Train, Test, pred, w, b, Loss1, Loss2, 2)
 
-        Loss2 = Loss1
-        Loss1 = 0
-        for i in range(len(Train)):
-            Loss1 -= np.log(pred[i][train.target[i]])
-        Loss1 = Loss1 / len(Train) + 0.5 * penal * np.sum(w * w)
-
-    print(cycle)
-    sum = 0
-    pred_t = np.zeros(4)
-    for i in range(len(Train)):
-        z = np.dot(w, Train[i]) + b
-        pred_t = softmax(z)
-        #print(pred_t, train.target[i])
-        if(pred_t.tolist().index(max(pred_t)) == train.target[i]):
-            sum += 1
-            #print(i)
-    print(sum, len(train.data), sum / len(train.data))
-
-    sum = 0
-    for i in range(len(Test)):
-        z = np.dot(w, Test[i]) + b
-        pred_t = softmax(z)
-        #print(pred_t, test.target[i])
-        if(pred_t.tolist().index(max(pred_t)) == test.target[i]):
-            sum += 1
-            #print(i)
-    print(sum, len(test.data), sum / len(test.data))
-Lq()
+#Lq()
 #Perceptron()
-#Logistic()
-
+Logistic()
 plt.show()
