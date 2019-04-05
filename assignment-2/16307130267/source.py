@@ -13,7 +13,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 mean = lambda x: sum(x) / len(x)
 
 class Perceptron:
-    def __init__(self, n_iter, lr, train_X, train_y, test_X, test_y):
+    def __init__(self, n_iter, lr, X, y):
         '''
         paras:
             n_iter: number of iterations
@@ -21,42 +21,32 @@ class Perceptron:
         '''
         self.n_iter = n_iter
         self.lr = lr
-        self.w = np.random.rand(train_X.shape[-1])
+        self.w = np.random.rand(X.shape[-1])
         self.b = 0
-        self.train_X = train_X
-        self.train_y = train_y
-        self.test_X = test_X
-        self.test_y = test_y
+        self.X = X
+        self.y = y
         self.acti = lambda x: 1 if x > 0 else 0
         self.errors = []
 
-    def train(self):
-        train_X, train_y = self.train_X, self.train_y
+    def separate(self):
+        X, y = self.X, self.y
         for _ in range(self.n_iter):
             error = 0
             state = np.random.get_state()
-            np.random.shuffle(train_X)
+            np.random.shuffle(X)
             np.random.set_state(state)
-            np.random.shuffle(train_y)
-            for (X, y) in zip(train_X, train_y):
-                pred = np.dot(X, self.w) + self.b
-                err = y - self.acti(pred)
-                self.w += self.lr * err * X
+            np.random.shuffle(y)
+            for (Xi, yi) in zip(X, y):
+                pred = np.dot(Xi, self.w) + self.b
+                err = yi - self.acti(pred)
+                self.w += self.lr * err * Xi
                 self.b += self.lr * err
                 error += err != 0
             self.errors.append(error)
-        #print(self.errors)
-
-    def test(self):
-        error = 0
-        for (X, y) in zip(self.test_X, self.test_y):
-            pred = np.dot(X, self.w) + self.b
-            err = y - self.acti(pred)
-            error += err != 0
-        print(error)
+        print(self.errors)
 
     def plot(self, plt):
-        mi, mx = np.min(self.train_X), np.max(self.train_X) 
+        mi, mx = np.min(self.X), np.max(self.X) 
         mi_ = -1 * (self.b + mi * self.w[0]) / self.w[1]
         mx_ = -1 * (self.b + mx * self.w[0]) / self.w[1]
         plt.title('Perceptron Algorithm')
@@ -64,48 +54,34 @@ class Perceptron:
         plt.show()
 
 class LeastSquare:
-    def __init__(self, train_X, train_y, test_X, test_y):
+    def __init__(self, X, y):
 
-        self.w = np.random.rand(train_X.shape[-1] + 1, 2)
+        self.w = np.random.rand(X.shape[-1] + 1, 2)
 
-        self.train_X = np.concatenate(
-            (train_X, np.array([np.ones(train_X.shape[0])]).transpose()), axis=-1
+        self.X = np.concatenate(
+            (X, np.array([np.ones(X.shape[0])]).transpose()), axis=-1
             )
-        self.train_y = np.array([[0, 1] if y else [1, 0] for y in train_y])
-        
-        self.test_X = np.concatenate(
-            (test_X, np.array([np.ones(test_X.shape[0])]).transpose()), axis=-1
-            )
-        self.test_y = np.array([[0, 1] if y else [1, 0] for y in test_y])
+        self.y = np.array([[0, 1] if yi else [1, 0] for yi in y])
         
         self.acti = lambda x: [1, 0] if x[0] > x[1] else [0, 1]
 
-    def train(self):
+    def separate(self):
         self.w = np.dot(
             np.dot(
-                np.linalg.inv(np.dot(self.train_X.transpose(), self.train_X)),
-                self.train_X.transpose()
+                np.linalg.inv(np.dot(self.X.transpose(), self.X)),
+                self.X.transpose()
                 ),
-            self.train_y
+            self.y
             )
         error = 0
-        for (X, y) in zip(self.train_X, self.train_y):
+        for (X, y) in zip(self.X, self.y):
             pred = self.acti(np.dot(X, self.w))
-            err = y - pred
-            error += (sum(err) != 0)
-        #print(error)
-
-    def test(self):
-        error = 0
-        for (X, y) in zip(self.test_X, self.test_y):
-            pred = self.acti(np.dot(X, self.w))
-            print(pred, y)
             err = y - pred
             error += (sum(err) != 0)
         print(error)
 
     def plot(self, plt):
-        mi, mx = np.min(self.train_X), np.max(self.train_X)
+        mi, mx = np.min(self.X), np.max(self.X)
         mi_ = -1 * ((self.w[2][0]-self.w[2][1]) + mi * (self.w[0][0]-self.w[0][1])) / (self.w[1][0]-self.w[1][1])
         mx_ = -1 * ((self.w[2][0]-self.w[2][1]) + mx * (self.w[0][0]-self.w[0][1])) / (self.w[1][0]-self.w[1][1])
         plt.title('Least Square Model')
@@ -339,22 +315,13 @@ if __name__ == '__main__':
     #---------- Part I ----------
     d = get_linear_seperatable_2d_2c_dataset()
 
-    l = LeastSquare(train_X=d.X, train_y=d.y, test_X=np.zeros_like(d.X), test_y=np.zeros_like(d.y))
-    '''
-    The parameters of Least Square here are just for report. 
-    You can split the data into training and test data.
-    '''
-    l.train()
+    l = LeastSquare(X=d.X, y=d.y)
+    l.separate()
     l.plot(d.plot(plt))
 
-    p = Perceptron(n_iter=100, lr=0.1, train_X=d.X, train_y=d.y, test_X=np.zeros_like(d.X), test_y=np.zeros_like(d.y))
-    '''
-    The parameters of Perceptron here are just for report. 
-    You can split the data into training and test data.
-    '''
-    p.train()
+    p = Perceptron(n_iter=100, lr=0.1, X=d.X, y=d.y)
+    p.separate()
     p.plot(d.plot(plt))
-    
     
     #---------- Part II ----------
     train, test = get_text_classification_datasets()
