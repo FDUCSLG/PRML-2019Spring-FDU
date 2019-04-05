@@ -13,10 +13,10 @@ import nltk
 import collections
 # np.set_printoptions(threshold=np.inf) # prevent ...
 # nltk.download('stopwords')
-from __init__ import *
-# os.sys.path.append("..")
+# from __init__ import *
+os.sys.path.append("..")
 # use the above line of code to surpass the top module barrier
-# from handout import *
+from handout import *
 
 #=================================================#
 #                      TASK1                      #
@@ -69,6 +69,14 @@ def main_1():
 #                      TASK2                      #
 #=================================================#
 # Perceptron Algorithm
+def test_perceptron(W,X,y):
+    predict=np.dot(W.T,X.T)
+    ct=0
+    for i in range(0,len(y)):
+        if (predict[i]>=0 and y[i]==-1) or (predict[i]<=0 and y[i]==1):
+            ct+=1
+    return ct/len(y)
+
 def perceptron(X,y):
     sz=len(X)
     newY=[]
@@ -77,10 +85,10 @@ def perceptron(X,y):
             newY.append(1)
         else:
             newY.append(-1)
-    
+    acc=[]
     w=np.zeros(3)
     # print(newY)
-    for i in range(0,500):
+    for i in range(0,2):
         # random here
         order=np.random.permutation(sz)
         for j in order:
@@ -93,8 +101,10 @@ def perceptron(X,y):
             # print(w_x)
             if w_x*y_<=0:
                 # print(1)
-                w=w+y_*x_
-    return w            
+                w=w+1*y_*x_
+            acc.append(test_perceptron(w,X,y))
+    # return w
+    return acc            
 
 def plot_1(w):
     x_=[-1,1]
@@ -104,18 +114,19 @@ def plot_1(w):
 
 def main_2():
     dataset=get_linear_seperatable_2d_2c_dataset()
-    dataset.plot(plt)
+    # dataset.plot(plt)
 
     newX=augment(dataset.X)
     y=dataset.y
 
     #compute
     w=perceptron(newX,y)
-    # print(w)
 
     #show
     print(w)
-    plot_1(w)
+    # plot_1(w)
+    plt.plot(range(0,len(w)),w)
+    plt.show()
     return w
 
 # main_2()
@@ -128,9 +139,6 @@ def main_2():
 # Part two
 # Text classification based on logistic regression.
 
-lamda=1
-alpha=0.1
-
 # softmax to onehot
 def get_onehot(W_c,X): #W_c=d*c X=d*N
     ori=np.exp(np.dot(W_c.T,X)) #ori=c*N
@@ -141,44 +149,74 @@ def get_onehot(W_c,X): #W_c=d*c X=d*N
     # print(one_hot)
     return one_hot.T #one_hot=c*N
 
+def softmax(W_c,X): #X=(d+1)*N
+    z=np.dot(W_c.T,X) # z = c*N
+    z=z-np.max(z,axis=0)
+    up=np.exp(z) # up = c*N
+    down=np.sum(up,axis=0) # down = 1*N
+    softmax_error=(np.array([up[:,i]/down[i] for i in range(0,X.shape[1])])).T
+    return softmax_error
+
 def cross_entropy_gradient(W_c,X,Y): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
-    #W_c=(d+1)*c x=(d+1)*1 y=c*1 when stochastic gradient descent train
-    Y_tilta=get_onehot(W_c,X) #Y_tilta=c*N
+    Y_tilta=softmax(W_c,X) #Y_tilta=c*N
     Y_sub=(Y-Y_tilta).T
     return np.dot(X,Y_sub) #X_Y=d*c
 
-def normal_gradient_descent_train(X,Y,T):
-    W_c=np.zeros((X.shape[0],Y.shape[0]))
-    step_error=[]
-    N=X.shape[1]
-    for i in range(0,T):
-        W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X,Y)/N
-        step_error.append(test(W_c,X,Y))
-    return W_c,step_error
+def loss_funct(W,X,Y):
+    soft_error=softmax(W,X)
+    # soft_error=np.maximum(0.0000001,soft_error)
+    error=0
+    for i in range(0,X.shape[1]):
+        error+=np.dot(Y[:,i],np.log(soft_error[:,i]))
+        # print(error)
+    error=-error/X.shape[1]
+    return error
 
-def stochastic_gradient_descent_train(X,Y,T): #W_c=(d+1)*c X=(d+1)*N Y=c*N when usual train
+def gradient_descent(model,X,Y,flag,lamda,epsilon,alpha,k):
     W_c=np.zeros((X.shape[0],Y.shape[0]))
-    N=X.shape[1]
+    T=0
     step_error=[]
-    for i in range(0,T):
-        order=np.random.permutation(N)
-        for j in order:
-            x=(np.array([X[:,j]])).T
-            y=(np.array([Y[:,j]])).T
-            W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,x,y)
-            step_error.append(test(W_c,X,Y))
-    return W_c,step_error
-
-def batched_gradient_descent_train(X,Y,k): #k marks the num of train data
-    W_c=np.zeros((X.shape[0],Y.shape[0]))
-    T=10000
+    loss_error=[]
     N=X.shape[1]
-    for i in range(0,T):
-        order=np.random.randint(0,N)
-        X_cmp=X[:,order:min(order+k,N-1)] #X_cmp=(d+1)*k
-        Y_cmp=Y[:,order:min(order+k,N-1)]
-        W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X_cmp,Y_cmp)/N
-    return W_c
+    last_W_c=np.zeros((X.shape[0],Y.shape[0]))
+    while 1:
+        T+=1
+        print("You are now at epoch %d" %T)
+        if model==1: #normal
+            W_c=W_c*(1-alpha*lamda/N)+alpha*cross_entropy_gradient(W_c,X,Y)/N
+        elif model==2: #stochastic
+            order=np.random.permutation(N)
+            for j in order:
+                x=(np.array([X[:,j]])).T
+                y=(np.array([Y[:,j]])).T
+                W_c=W_c*(1-alpha*lamda)+alpha*cross_entropy_gradient(W_c,x,y)
+            # print(W_c)            
+        else: #batched
+            x=0
+            X_=X.T
+            Y_=Y.T
+            while x+k<N:
+                # print(x+k)
+                X_cmp=X_[x:x+k] #X_cmp=(d+1)*k
+                Y_cmp=Y_[x:x+k]
+                X_cmp=X_cmp.T
+                Y_cmp=Y_cmp.T
+                W_c=W_c*(1-alpha*lamda/k)+alpha*cross_entropy_gradient(W_c,X_cmp,Y_cmp)/k
+                x+=k    
+            # print(W_c)
+        gradient=loss_funct(W_c,X,Y)
+        if flag==1:
+            print("The loss is %f" %gradient)
+            loss_error.append(gradient)
+        elif flag==2:
+            acc=test(W_c,X,Y)
+            print("The acc is %f" %acc)
+            step_error.append(acc)
+        if  T>100 or np.sum((W_c-last_W_c)**2)<epsilon:
+            break
+        else:
+            last_W_c=W_c
+    return W_c,step_error,loss_error,T
 
 # text preprocess
 def remove_punctuation(str):
@@ -206,6 +244,20 @@ def build_one_hot(dictionary,words):
         if word in dictionary:
             one_hot[dictionary[word]]=1
     return one_hot
+
+def build_testset(list_of_papers,dictionary):
+    papers=[] # collect a list of lists of words
+    for paper in list_of_papers:
+        # pre-
+        words_exist=remove_punctuation(paper)
+        words_list=words_exist.split()
+        words_list=remove_stopwords(words_list)
+        # add into the all
+        papers.append(words_list) 
+    one_hot_collections=np.array([np.zeros(len(dictionary))])
+    for words_list in papers:
+        one_hot_collections=np.row_stack((one_hot_collections,build_one_hot(dictionary,words_list)))
+    return np.delete(one_hot_collections,0,0)
 
 # return dictionary and a list of built one-hot vectors
 def build_dict(list_of_papers):
@@ -249,52 +301,109 @@ def test(W_c,X,Y):
     for i in range(0,X.shape[1]):
         if (result[:,i]==Y[:,i]).all():
             ct=ct+1
-            # print('True')
-        # else:
-        #     print("False!")
     return (float(ct)/float(X.shape[1]))
 
 def build_env():
     dataset_train,dataset_test=get_text_classification_datasets()
-    target=build_one_hot_target(dataset_train.target)
+    target_train=build_one_hot_target(dataset_train.target)
+    traget_test=build_one_hot_target(dataset_test.target)
     # # C=len(dataset_train.categories)
     one_hot_collections,dictionary=build_dict(dataset_train.data)
+    testset_collections=build_testset(dataset_test.data,dictionary)
     X=augment(one_hot_collections).T
-    Y=target.T
+    X_=augment(testset_collections).T
+    Y=target_train.T
     np.savetxt('X.txt',X)
     np.savetxt('Y.txt',Y)
+    np.savetxt('testY.txt',traget_test.T)
+    np.savetxt('testX.txt',X_)
     # return X,Y
 
-def main_3(model,T):
+def main_3(model=1,flag=0,lamda=0.1,epsilon=0,alpha=0.01,k=30):
     X=np.loadtxt('X.txt')
     Y=np.loadtxt('Y.txt')
-
-    if model==1:
-        W_c,step_error=normal_gradient_descent_train(X,Y,T)
-    elif model==2:
-        W_c,step_error=stochastic_gradient_descent_train(X,Y,T)  
-    else:
-        k=3
-        W_c=batched_gradient_descent_train(X,Y,k)
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,alpha,k)
+    print("You have run %d epochs" %T)
     # print(W_c)
-
-    plt.plot(range(0,len(step_error)),step_error)
+    print(test(W_c,X,Y))
+    if flag==1:
+        plt.plot(range(0,len(loss_error)),loss_error)
+    elif flag==2:
+        plt.plot(range(0,len(step_error)),step_error)
+    else:
+        pass
+    # plt.plot(range(0,len(loss_error)),loss_error)
     plt.show()
+    Xtest=np.loadtxt('testX.txt')
+    Ytest=np.loadtxt('testY.txt')
+    print(test(W_c,Xtest,Ytest))
     # # test here, and with nice answer
     # docs_toy = ["Hi!How are you?","Do you have a dog?"]
     # one_hot_collections,dictionary=build_dict(docs_toy)
     # print(one_hot_collections)
 
+def plot_on_alpha_of_loss(model=1,flag=1,lamda=0.001,epsilon=0,k=30):
+    X=np.loadtxt('X.txt')
+    Y=np.loadtxt('Y.txt')
+    # print(W_c)
+    # print(test(W_c,X,Y))
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,3)
+    plt.plot(range(0,len(loss_error)),loss_error,color='red',label='3')
+    print('You reach convergence at epoch %d' %T)
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,10)
+    plt.plot(range(0,len(loss_error)),loss_error,color='orange',label='10')
+    print('You reach convergence at epoch %d' %T)
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,30)
+    plt.plot(range(0,len(loss_error)),loss_error,color='blue',label='30')
+    print('You reach convergence at epoch %d' %T)
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,50)
+    plt.plot(range(0,len(loss_error)),loss_error,color='green',label='50')
+    print('You reach convergence at epoch %d' %T)
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,70)
+    plt.plot(range(0,len(loss_error)),loss_error,color='red',label='70',linestyle='--')
+    print('You reach convergence at epoch %d' %T)
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,100)
+    plt.plot(range(0,len(loss_error)),loss_error,color='orange',label='100',linestyle='--')
+    print('You reach convergence at epoch %d' %T)
+    plt.legend(loc='best')
+    # plt.plot(range(0,len()),loss_error)
+    plt.show()
+# main_3(2,2)
 
-# main_3(2)
+def plot_on_alpha_of_acc(model=1,flag=2,lamda=300,epsilon=1,k=30):
+    X=np.loadtxt('X.txt')
+    Y=np.loadtxt('Y.txt')
+    # print(W_c)
+    # print(test(W_c,X,Y))
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.001,k)
+    plt.plot(range(0,len(step_error)),step_error,color='red',label='0.001')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.01,k)
+    plt.plot(range(0,len(step_error)),step_error,color='orange',label='0.01')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.1,k)
+    plt.plot(range(0,len(step_error)),step_error,color='blue',label='0.1')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.2,k)
+    plt.plot(range(0,len(step_error)),step_error,color='green',label='0.2')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.5,k)
+    plt.plot(range(0,len(step_error)),step_error,color='red',label='0.5',linestyle='--')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,0.7,k)
+    plt.plot(range(0,len(step_error)),step_error,color='orange',label='0.7',linestyle='--')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,1,k)
+    plt.plot(range(0,len(step_error)),step_error,color='blue',label='1', linestyle='--')
+    W_c,step_error,loss_error,T=gradient_descent(model,X,Y,flag,lamda,epsilon,1.5,k)
+    plt.plot(range(0,len(step_error)),step_error,color='green',label='1.5',linestyle='--')
+    plt.legend(loc='best')
+    # plt.plot(range(0,len()),loss_error)
+    plt.show()
 
 
-# TODO list 
-# write down how to comput the gradient
-# L2 regularization, should regularize the bias term?
-# how to check the correctness
-# plot loss curve
-# how to decide the learning rate
-# when to determinate the train
-# compare three descent methods, about pros and cons
-# report the three different model
+def three_models(flag=1,lamda=0.01,epsilon=0.0001,alpha=0.7,k=30):
+    X=np.loadtxt('X.txt')
+    Y=np.loadtxt('Y.txt')
+    W_c,step_error,loss_error,T=gradient_descent(1,X,Y,flag,lamda,epsilon,alpha,k)
+    plt.plot(range(0,len(loss_error)),loss_error,color='red',label='normal')
+    W_c,step_error,loss_error,T=gradient_descent(2,X,Y,flag,lamda,epsilon,alpha,k)
+    plt.plot(range(0,len(loss_error)),loss_error,color='blue',label='stochastic')
+    W_c,step_error,loss_error,T=gradient_descent(3,X,Y,flag,lamda,epsilon,alpha,k)
+    plt.plot(range(0,len(loss_error)),loss_error,color='green',label='batched=30')
+    plt.legend(loc='best')
+    plt.show()
