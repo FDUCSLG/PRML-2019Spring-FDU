@@ -33,10 +33,10 @@ class Perceptron:
         print("b =", self.b)
 
     def predict(self, X):
-        result = X @ self.w + self.b
-        result[result<0]=-1
-        result[result>=0]=1
-        return result
+        y = X @ self.w + self.b
+        y[y<0]=-1
+        y[y>=0]=1
+        return y
 
     def plot(self):
         x_min, x_max = -1.5, 1.5

@@ -10,11 +10,16 @@ import re
 
 class Logistic:
     def __init__(self, dataset_train, dataset_test):
+        self.categories = len(dataset_train.target_names)
+        self.alpha = 0.25
+        self.lamb = 0.5
+        self.batch = 1
+
         self.vocabulary = {}
         self.X_train = self.preprocess_X(dataset_train.data)
         self.y_train = self.preprocess_y(dataset_train.target)
         self.X = self.preprocess_X(dataset_test.data, save_vocabulary=False)
-        self.y = self.preprocess_y(dataset_test.target, categories=4)
+        self.y = self.preprocess_y(dataset_test.target)
 
     def preprocess_X(self, X_data, save_vocabulary=True):
         min_count = 10
@@ -52,22 +57,50 @@ class Logistic:
 
         return dataset
 
-    def preprocess_y(self, y_data, categories=4):
-        dataset = np.zeros([len(y_data), categories])
+    def preprocess_y(self, y_data):
+        dataset = np.zeros([len(y_data), self.categories])
         dataset[np.arange(len(y_data)), y_data] = 1
         return dataset
 
     def softmax(self, z):
-        z = z - np.min(z, axis=1)
-        return np.exp(z) / (np.sum(np.exp(z), axis=1))
+        z = np.exp(z - np.max(z, axis=1))
+        z = z / np.sum(z, axis=1)
+        return z
 
-    def loss(self, w_, lamb=0.5):
-        y_pred = self.softmax(w_ @ self.X_train)
-        return - np.trace(self.y * np.log(y_pred)) / len(self.X_train) + lamb * np.sum(w_ * w_)
+    def loss(self, w, b):
+        return - np.sum(self.y_train * np.log(self.softmax(w @ self.X_train + b))) / len(self.y_train) + self.lamb * np.sum(w ** 2)
+
+    def batched_dataset(self):
+        pass
+
+    def gradient(self, w, b):
+        y_pred = self.softmax(w @ self.X_train + b)
+        w_gradient = 2 * self.lamb * w - self.X_train * (self.y_train - y_pred) / len(self.X_train)
+        b_gradient = - np.sum(self.y_train - y_pred, axis=0) / len(self.X_train)
+        return w_gradient, b_gradient
+
+    def train(self):
+        N, M, K = self.X_train.shape[0], self.X_train.shape[1], self.categories
+        w = np.ones([M, K])
+        b = np.ones(K)
+
+        loss_list = [self.loss(w, b)]
+
+        while True:
+            for i in range(0, N, self.batch):
+                w_gradient, b_gradient = self.gradient(w, b)
+                w -= self.alpha * w_gradient
+                b -= self.alpha * b_gradient
+            loss_list.append(self.loss(w, b))
+
+    def run(self):
+        print("Logistic regression:")
+        print(self.categories)
 
 
-print("Logistic regression:")
 dataset_train, dataset_test = get_text_classification_datasets()
 logistic = Logistic(dataset_train, dataset_test)
-
-print(len(logistic.y_train))
+logistic.run()
+# print(len(logistic.y_train))
+# print(logistic.y_train[0])
+# print(logistic.X_train.shape)
