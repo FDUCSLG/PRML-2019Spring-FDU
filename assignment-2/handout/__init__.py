@@ -45,6 +45,7 @@ def get_text_classification_datasets():
     print("In testing dataset:")
     print('Samples:', len(dataset_test.data))
     print('Categories:', len(dataset_test.target_names))
+    return categories,dataset_train,dataset_test
 
 
 if __name__ == "__main__":
