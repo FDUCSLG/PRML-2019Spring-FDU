@@ -9,6 +9,8 @@ import math
 d = get_linear_seperatable_2d_2c_dataset()
 d.plot(plt).show()
 
+## PART 1   
+### least square model
 def least_square_fld(dataset,plt):
     # Function estimates the LDA parameters
     ## pass train data only
@@ -93,6 +95,7 @@ def least_square_fld(dataset,plt):
 least_square_fld(d,plt)
 
 
+### perceptron model
 def Perceptron(dataset,epoch,batch_size,l_rate,plt):
     def sigmoid_activation(x):
         # compute and return the sigmoid activation value for a
