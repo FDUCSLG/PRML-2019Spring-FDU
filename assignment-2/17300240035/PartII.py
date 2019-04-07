@@ -108,10 +108,10 @@ def Logistic_Regression(data, target, alpha = 0.25, epsilon = 1e-4, lamb = 1e-3,
         data = tot[0:N, 0:M].copy()
         target = tot[0:N, M:M+K].copy()
 
-    #plt.xlabel("Iteration No.")
-    #plt.ylabel("Loss Function")
-    #plt.plot(np.linspace(0, iter, len(Loss_Record)), Loss_Record)
-    #plt.show()
+    plt.xlabel("Epoch No.")
+    plt.ylabel("Loss Function")
+    plt.plot(np.linspace(0, iter, len(Loss_Record)), Loss_Record)
+    plt.show()
     return W, b, iter
 
 def Classification_Accuracy(X, target, W, b):

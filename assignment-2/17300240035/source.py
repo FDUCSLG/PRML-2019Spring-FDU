@@ -27,11 +27,11 @@ N = len(dataset_train.data)
 vocab = PartII.Get_Vocabulary(dataset_train.data)
 multi_hot, one_hot = PartII.Preprocess(dataset_train.data, dataset_train.target, len(dataset_train.target_names), vocab)
 #Full-Batch-Gradient-Descent
-W, b, iter = PartII.Logistic_Regression(data = multi_hot, target = one_hot, epsilon = 1e-3, alpha = 0.25, batch = N)
+#W, b, iter = PartII.Logistic_Regression(data = multi_hot, target = one_hot, epsilon = 1e-3, alpha = 0.25, batch = N)
 #Mini-Batch-Gradient-Descent
 #W, b, iter = PartII.Logistic_Regression(data = multi_hot, target = one_hot, epsilon = 1e-3, alpha = 0.25, batch = 128)
 #Stochastic-Gradient-Descent
-#W, b, iter = PartII.Logistic_Regression(data = multi_hot, target = one_hot, epsilon = 1e-3, alpha = 0.01, batch = 1)
+W, b, iter = PartII.Logistic_Regression(data = multi_hot, target = one_hot, epsilon = 1e-3, alpha = 0.01, batch = 1)
 print("Accuracy on training set:", PartII.Classification_Accuracy(multi_hot, dataset_train.target, W, b))
 
 '''
