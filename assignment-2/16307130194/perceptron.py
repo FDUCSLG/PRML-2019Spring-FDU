@@ -18,12 +18,12 @@ class Perceptron:
 
     def train(self, eta=0.1):
         w = np.ones(3)
-        X3 = np.c_[self.X, np.ones(len(self.X))]
+        X = np.c_[self.X, np.ones(len(self.X))]
         while True:
             last_w = w.copy()
-            for X, y in zip(X3, self.y):
-                if w @ X * y < 0:
-                    w = w + eta * X * y
+            for x, y in zip(X, self.y):
+                if w @ x * y < 0:
+                    w = w + eta * x * y
             if (last_w == w).all():
                 break
 
@@ -48,10 +48,11 @@ class Perceptron:
         print("Accuracy: %f" % (sum(self.y == self.predict(self.X)) / len(self.y)))
 
     def run(self):
+        print("Perceptron:")
         self.train()
         self.accuracy()
         self.plot()
 
-print("Perceptron:")
+
 perceptron = Perceptron(get_linear_seperatable_2d_2c_dataset())
 perceptron.run()

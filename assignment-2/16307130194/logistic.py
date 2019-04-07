@@ -66,8 +66,6 @@ class Logistic:
         return - np.trace(self.y * np.log(y_pred)) / len(self.X_train) + lamb * np.sum(w_ * w_)
 
 
-
-
 print("Logistic regression:")
 dataset_train, dataset_test = get_text_classification_datasets()
 logistic = Logistic(dataset_train, dataset_test)

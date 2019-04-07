@@ -34,10 +34,11 @@ class LSM:
         print("Accuracy: %f" % (sum(self.y == self.predict(self.X)) / len(self.y)))
 
     def run(self):
+        print("Least square model:")
         self.train()
         self.accuracy()
         self.plot()
 
-print("Least square model:")
+
 lsm = LSM(get_linear_seperatable_2d_2c_dataset())
 lsm.run()
