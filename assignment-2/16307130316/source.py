@@ -12,9 +12,6 @@ np.random.seed(1)
 
 # Part 1
 data_set = get_linear_seperatable_2d_2c_dataset()
-# split the data set to training set and test set
-train, test = data_set.split_dataset()
-
 
 class LeastSquare:
     def __init__(self, data_set):
@@ -49,21 +46,18 @@ class LeastSquare:
         plt.plot([-1.5, 1.0], [-1.5 * k + b, 1.0 * k + b])
         return plt
 
-    def compute_accuracy(self, d):  # calculate accuracy over test set
+    def compute_accuracy(self, d):  # calculate accuracy
         pred_y = [self.classify(x) for x in d.X]
         return d.acc(pred_y)
 
 """
-M = LeastSquare(train)
+M = LeastSquare(data_set)
 fig = plt.figure()
-# plt.title("Training set, accuracy=%f" % M.compute_accuracy(train))
-# plt = train.plot(plt)
-plt.title("Test set, accuracy=%f" % M.compute_accuracy(test))
-plt = test.plot(plt)  # d.X 为二维坐标，d.y是类别true or false,黄色是true，紫色是false
+plt.title("Least Square Model, accuracy=%f" % M.compute_accuracy(data_set))
+plt = data_set.plot(plt)  # d.X 为二维坐标，d.y是类别true or false,黄色是true，紫色是false
 plt = M.draw(plt)
 plt.show()
-# print("Accuracy over training set:", M.compute_accuracy(train))
-print("Accuracy over test set", M.compute_accuracy(test))
+print("Accuracy over dataset", M.compute_accuracy(data_set))
 """
 
 
@@ -109,16 +103,13 @@ class Perceptron:
         return d.acc(pred_y)
 
 """
-MP = Perceptron(train)
+MP = Perceptron(data_set)
 fig = plt.figure()
-# plt.title("Training set, accuracy=%f" % MP.compute_accuracy(train))
-# plt = train.plot(plt)
-plt.title("Test set, accuracy=%f" % MP.compute_accuracy(test))
-plt = test.plot(plt)  # d.X 为二维坐标，d.y是类别true or false,黄色是true，紫色是false
+plt.title("Perceptron, accuracy=%f" % MP.compute_accuracy(data_set))
+plt = data_set.plot(plt)  # d.X 为二维坐标，d.y是类别true or false,黄色是true，紫色是false
 plt = MP.draw(plt)
 plt.show()
-# print("Accuracy over training set:", MP.compute_accuracy(train))
-print("Accuracy over test set", MP.compute_accuracy(test))
+print("Accuracy over dataset", MP.compute_accuracy(data_set))
 """
 
 
@@ -144,6 +135,7 @@ class LogisticTextClassification:
         self.vocab = []
         self.categories = self.text_train.target_names
         self.X, self.target_vec = self.preprocessing()
+        # Modify here to use the three different ways
         # self.W = self.logistic()
         self.W = self.logistic_batched(5)
         # self.W = self.logistic_stochastic()
@@ -321,6 +313,7 @@ class LogisticTextClassification:
         return right/len(self.text_test.data)
 
 """
+# change some statements in class init, to switch between the three ways
 ML = LogisticTextClassification()
 print(ML.compute_loss(ML.W))
 print(ML.compute_accuracy())
