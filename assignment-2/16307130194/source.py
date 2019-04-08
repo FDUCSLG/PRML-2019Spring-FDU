@@ -15,30 +15,24 @@ def program_parser():
 
     parser.add_argument('--algorithm',
                         choices=["least_square", "perceptron", "logistic"],
-                        help='The algorithms.')
+                        help='the algorithms')
 
     args = parser.parse_args()
 
     linear_dataset = get_linear_seperatable_2d_2c_dataset()
     lsm = LSM(linear_dataset)
-    lsm.run()
-
     perceptron = Perceptron(linear_dataset)
-    perceptron.run()
-
-    dataset_train, dataset_test = get_text_classification_datasets()
-    logistic = Logistic(dataset_train, dataset_test)
-    logistic.run()
 
     algos = {
         "least_square": lsm.run,
-        "perceptron": perceptron.run,
-        "logistic": logistic.run
+        "perceptron": perceptron.run
     }
 
-    print(args.algorithm)
-    print(algos.keys())
-    if args.algorithm in algos.keys():
+    if args.algorithm == "logistic":
+        dataset_train, dataset_test = get_text_classification_datasets()
+        logistic = Logistic(dataset_train, dataset_test)
+        logistic.run()
+    elif args.algorithm in algos.keys():
         algos[args.algorithm]()
     else:
         parser.print_help()

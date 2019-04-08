@@ -54,5 +54,5 @@ class Perceptron:
         self.plot()
 
 
-perceptron = Perceptron(get_linear_seperatable_2d_2c_dataset())
-perceptron.run()
+# perceptron = Perceptron(get_linear_seperatable_2d_2c_dataset())
+# perceptron.run()

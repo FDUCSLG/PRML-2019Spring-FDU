@@ -40,5 +40,5 @@ class LSM:
         self.plot()
 
 
-lsm = LSM(get_linear_seperatable_2d_2c_dataset())
-lsm.run()
+# lsm = LSM(get_linear_seperatable_2d_2c_dataset())
+# lsm.run()
