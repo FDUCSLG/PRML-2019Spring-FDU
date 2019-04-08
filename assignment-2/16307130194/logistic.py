@@ -12,49 +12,54 @@ class Logistic:
     alpha = 0.25
     lamb = 0.5
     batch = 1
+    epoch = 100
+    min_count = 10
 
     def __init__(self, dataset_train, dataset_test):
         self.categories = len(dataset_train.target_names)
 
-        self.vocabulary = {}
+        self.vocabulary = self.get_vocabulary(dataset_train.data)
         self.X_train = self.preprocess_X(dataset_train.data)
         self.y_train = self.preprocess_y(dataset_train.target)
-        self.X = self.preprocess_X(dataset_test.data, save_vocabulary=False)
+        self.X = self.preprocess_X(dataset_test.data)
         self.y = self.preprocess_y(dataset_test.target)
 
-    def preprocess_X(self, X_data, save_vocabulary=True):
-        min_count = 10
+    def get_vocabulary(self, X_data):
         vocabulary = {}
-        documents = []
 
         for text in X_data:
             text = text.translate(str.maketrans("", "", string.punctuation))
             text = re.sub('[' + string.whitespace + ']', ' ', text)
             words = text.lower().split(' ')
-            documents.append(words)
             for word in words:
                 if word in vocabulary.keys():
                     vocabulary[word] = vocabulary[word] + 1
                 else:
                     vocabulary[word] = 1
 
-        count = 0
+        index = 0
         new_vocabulary = {}
         for key in vocabulary:
-            if vocabulary[key] >= min_count:
-                new_vocabulary[key] = count
-                count = count + 1
+            if vocabulary[key] >= self.min_count:
+                new_vocabulary[key] = index
+                index = index + 1
 
-        if save_vocabulary:
-            self.vocabulary = new_vocabulary
+        return new_vocabulary
 
-        vocabulary_list = new_vocabulary.keys()
-        dataset = np.zeros([len(documents), len(vocabulary_list)])
+    def preprocess_X(self, X_data):
+        documents = []
+        for text in X_data:
+            text = text.translate(str.maketrans("", "", string.punctuation))
+            text = re.sub('[' + string.whitespace + ']', ' ', text)
+            words = text.lower().split(' ')
+            documents.append(words)
 
+        dataset = np.zeros([len(X_data), len(self.vocabulary)])
+        vocabulary_list = self.vocabulary.keys()
         for i, words in enumerate(documents):
             for word in words:
                 if word in vocabulary_list:
-                    dataset[i, new_vocabulary[word]] = 1
+                    dataset[i, self.vocabulary[word]] = 1
 
         return dataset
 
@@ -69,10 +74,7 @@ class Logistic:
         return z
 
     def loss(self, w, b):
-        return - np.sum(self.y_train * np.log(self.softmax(w @ self.X_train + b))) / len(self.y_train) + self.lamb * np.sum(w ** 2)
-
-    def batched_dataset(self):
-        pass
+        return - np.sum(self.y_train * np.log(self.softmax(self.X_train @ w + b))) / len(self.y_train) + self.lamb * np.sum(w ** 2)
 
     def gradient(self, X_train, y_train, w, b):
         y_pred = self.softmax(X_train @ w + b)
@@ -87,22 +89,33 @@ class Logistic:
 
         loss_list = [self.loss(w, b)]
 
-        while True:
+        for epoch in range(self.epoch):
+            dataset = np.hstack((self.y_train, self.X_train))
+            np.random.shuffle(dataset)
+            y_train, X_train = dataset[:, 0:self.categories], dataset[:, self.categories:]
             for i in range(0, N, self.batch):
-                w_gradient, b_gradient = self.gradient(self.X_train, self.y_train, w, b)
+                end = i + self.batch
+                if end > N:
+                    end = N
+                w_gradient, b_gradient = self.gradient(X_train[i:end, :], self.y_train[i:end, :], w, b)
                 w -= self.alpha * w_gradient
                 b -= self.alpha * b_gradient
             loss_list.append(self.loss(w, b))
 
+        print(loss_list)
+
     def run(self):
         print("Logistic regression:")
-        print(self.categories)
-        M, K = self.X_train.shape[1], self.categories
-        w = np.ones([M, K])
-        b = np.ones(K)
-        print(self.X_train.shape, w.shape, b.shape)
-        w_gradient, b_gradient = self.gradient(self.X_train, self.y_train, w, b)
-        print(w_gradient.shape, b_gradient.shape)
+        # print(self.categories)
+        # M, K = self.X_train.shape[1], self.categories
+        # w = np.ones([M, K])
+        # b = np.ones(K)
+        # print(self.X_train.shape, w.shape, b.shape)
+        # print(self.X.shape, self.y.shape)
+        # w_gradient, b_gradient = self.gradient(self.X_train, self.y_train, w, b)
+        # print(w_gradient.shape, b_gradient.shape)
+
+        self.train()
 
 
 import ssl
@@ -115,3 +128,6 @@ logistic.run()
 # print(len(logistic.y_train))
 # print(logistic.y_train[0])
 # print(logistic.X_train.shape)
+# for i in range(0, 10, 3):
+#     print(i)
+# print(i)
