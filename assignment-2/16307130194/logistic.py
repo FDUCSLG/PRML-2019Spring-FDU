@@ -84,8 +84,8 @@ class Logistic:
 
     def train(self):
         N, M, K = self.X_train.shape[0], self.X_train.shape[1], self.categories
-        w = np.ones([M, K])
-        b = np.ones(K)
+        w = np.zeros([M, K])
+        b = np.zeros(K)
 
         loss_list = [self.loss(w, b)]
 
@@ -98,11 +98,18 @@ class Logistic:
                 if end > N:
                     end = N
                 w_gradient, b_gradient = self.gradient(X_train[i:end, :], self.y_train[i:end, :], w, b)
-                w -= self.alpha * w_gradient
-                b -= self.alpha * b_gradient
-            loss_list.append(self.loss(w, b))
+                w = w - self.alpha * w_gradient
+                b = b - self.alpha * b_gradient
+                loss = self.loss(w, b)
+                print(loss)
+                loss_list.append(loss)
 
-        print(loss_list)
+            # accuracy?
+
+        # print(loss_list)
+
+    def accuracy(self):
+        pass
 
     def run(self):
         print("Logistic regression:")
