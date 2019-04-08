@@ -9,11 +9,12 @@ import re
 
 
 class Logistic:
+    alpha = 0.25
+    lamb = 0.5
+    batch = 1
+
     def __init__(self, dataset_train, dataset_test):
         self.categories = len(dataset_train.target_names)
-        self.alpha = 0.25
-        self.lamb = 0.5
-        self.batch = 1
 
         self.vocabulary = {}
         self.X_train = self.preprocess_X(dataset_train.data)
@@ -63,8 +64,8 @@ class Logistic:
         return dataset
 
     def softmax(self, z):
-        z = np.exp(z - np.max(z, axis=1))
-        z = z / np.sum(z, axis=1)
+        z = np.exp(z - np.max(z, axis=1).reshape(z.shape[0], 1))
+        z = z / np.sum(z, axis=1).reshape(z.shape[0], 1)
         return z
 
     def loss(self, w, b):
@@ -73,10 +74,10 @@ class Logistic:
     def batched_dataset(self):
         pass
 
-    def gradient(self, w, b):
-        y_pred = self.softmax(w @ self.X_train + b)
-        w_gradient = 2 * self.lamb * w - self.X_train * (self.y_train - y_pred) / len(self.X_train)
-        b_gradient = - np.sum(self.y_train - y_pred, axis=0) / len(self.X_train)
+    def gradient(self, X_train, y_train, w, b):
+        y_pred = self.softmax(X_train @ w + b)
+        w_gradient = 2 * self.lamb * w - X_train.T @ (y_train - y_pred) / X_train.shape[0]
+        b_gradient = - np.sum(y_train - y_pred, axis=0) / X_train.shape[0]
         return w_gradient, b_gradient
 
     def train(self):
@@ -88,7 +89,7 @@ class Logistic:
 
         while True:
             for i in range(0, N, self.batch):
-                w_gradient, b_gradient = self.gradient(w, b)
+                w_gradient, b_gradient = self.gradient(self.X_train, self.y_train, w, b)
                 w -= self.alpha * w_gradient
                 b -= self.alpha * b_gradient
             loss_list.append(self.loss(w, b))
@@ -96,6 +97,16 @@ class Logistic:
     def run(self):
         print("Logistic regression:")
         print(self.categories)
+        M, K = self.X_train.shape[1], self.categories
+        w = np.ones([M, K])
+        b = np.ones(K)
+        print(self.X_train.shape, w.shape, b.shape)
+        w_gradient, b_gradient = self.gradient(self.X_train, self.y_train, w, b)
+        print(w_gradient.shape, b_gradient.shape)
+
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 dataset_train, dataset_test = get_text_classification_datasets()
