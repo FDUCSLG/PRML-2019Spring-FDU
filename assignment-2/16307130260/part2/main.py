@@ -209,7 +209,7 @@ if __name__ == "__main__":
         raw_data["val_x"], raw_data["val_y"], num_classes)
     
     # choose learning rate
-    choose_learning_rate(data, size_voca, num_classes)
+    # choose_learning_rate(data, size_voca, num_classes)
 
     # SGD MiniBGD FBGD
     # change_batch_size1(data, size_voca, num_classes)
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     kwargs["num_epochs"] = 2000
     kwargs["save_freq"] = 5
     kwargs["check_freq"] = 20
-    # training_best_model(data, size_voca, num_classes, test_data, kwargs, learning_rate)
+    training_best_model(data, size_voca, num_classes, test_data, kwargs, learning_rate)
 
     learning_rate = [0.5, 0.2, 0.1, 0.05]
     kwargs = kwargs_global.copy()
@@ -241,7 +241,7 @@ if __name__ == "__main__":
     kwargs["num_epochs"] = 400
     kwargs["save_freq"] = 20
     kwargs["check_freq"] = 4
-    # training_best_model(data, size_voca, num_classes, test_data, kwargs, learning_rate)
+    training_best_model(data, size_voca, num_classes, test_data, kwargs, learning_rate)
 
     learning_rate = [0.5, 0.2, 0.1, 0.05]
     kwargs = kwargs_global.copy()
@@ -251,4 +251,4 @@ if __name__ == "__main__":
     kwargs["num_epochs"] = 200
     kwargs["save_freq"] = 200
     kwargs["check_freq"] = 2
-    # training_best_model(data, size_voca, num_classes, test_data, kwargs, learning_rate)
+    training_best_model(data, size_voca, num_classes, test_data, kwargs, learning_rate)
