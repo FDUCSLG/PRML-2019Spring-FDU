@@ -12,7 +12,7 @@ class Logistic:
     alpha = 0.1
     lamb = 1e-4
     train_validate_ratio = 4 / 5
-    epoch = 100
+    epoch = 50
     min_count = 10
 
     def __init__(self, dataset_train, dataset_test):
@@ -89,25 +89,36 @@ class Logistic:
         b_gradient = - np.sum(y_train - y_pred, axis=0) / X_train.shape[0]
         return w_gradient, b_gradient
 
-    def check_gradient(self, w, b, w_gradient, b_gradient, delta=1e-6, epsilon=1e-6):
+    def check_gradient(self, epoch=7, amount=8, delta=1e-6, epsilon=1e-7):
         print("Checking gradient...")
 
-        error = []
-        for i in range(w_gradient.shape[0]):
-            for j in range(w_gradient.shape[1]):
-                w_delta = w.copy()
-                w_delta[i, j] = w_delta[i, j] + delta
-                error.append(np.abs(w_gradient[i, j] - (self.loss(w_delta, b) - self.loss(w, b)) / delta))
+        X_train, y_train = self.shuffle_dataset(self.X_train, self.y_train)
+        X_train, y_train = X_train[0:amount], y_train[0:amount]
+        w, b = np.zeros([X_train.shape[1], self.categories]), np.zeros(self.categories)
 
-        for i in range(len(b_gradient)):
-            b_delta = b.copy()
-            b_delta[i] = b_delta[i] + delta
-            error.append(np.abs(b_gradient[i] - (self.loss(w, b_delta) - self.loss(w, b)) / delta))
+        error = []
+        for k in range(epoch):
+            w_gradient, b_gradient = self.gradient(X_train, y_train, w, b)
+            # w gradient error
+            for i in range(w_gradient.shape[0]):
+                for j in range(w_gradient.shape[1]):
+                    w_delta = w.copy()
+                    w_delta[i, j] = w_delta[i, j] + delta
+                    error.append(np.abs(w_gradient[i, j] - (self.loss(X_train, y_train, w_delta, b) - self.loss(X_train, y_train, w, b)) / delta))
+            # b gradient error
+            for i in range(len(b_gradient)):
+                b_delta = b.copy()
+                b_delta[i] = b_delta[i] + delta
+                error.append(np.abs(b_gradient[i] - (self.loss(X_train, y_train, w, b_delta) - self.loss(X_train, y_train, w, b)) / delta))
+            # update w & b
+            w = w - self.alpha * w_gradient
+            b = b - self.alpha * b_gradient
 
         print("Max error %f" % np.max(error))
         if np.max(error) < epsilon:
-            return True
-        return False
+            print("Right gradient!")
+        else:
+            print("Wrong gradient!")
 
     def shuffle_dataset(self, X, y):
         dataset = np.hstack((y, X))
@@ -118,28 +129,21 @@ class Logistic:
         N, M, K = self.X_train.shape[0], self.X_train.shape[1], self.categories
 
         print("Start training...")
-        w = np.zeros([M, K])
-        b = np.zeros(K)
-        loss = []
-        train_accuracy = []
-        validate_accuracy = []
+        w, b = np.zeros([M, K]), np.zeros(K)
+        w_best, b_best = w.copy(), b.copy()
+        loss, train_accuracy, validate_accuracy = [], [], []
 
         for epoch in range(self.epoch):
             print("Epoch %d" % epoch, end=": ")
             X_train, y_train = self.shuffle_dataset(self.X_train, self.y_train)
-            # X_train, y_train = self.X_train, self.y_train
             for i in range(0, N, self.batch):
                 end = i + self.batch
                 if end > N:
                     end = N
                 w_gradient, b_gradient = self.gradient(X_train[i:end, :], y_train[i:end, :], w, b)
-                # if i < 10 and not self.check_gradient(w, b, w_gradient, b_gradient):
-                #     print("Wrong gradient!", end=" ")
                 w = w - self.alpha * w_gradient
                 b = b - self.alpha * b_gradient
-                # loss
-                l = self.loss(X_train[i:end, :], y_train[i:end, :], w, b)
-                loss.append(l)
+                loss.append(self.loss(X_train[i:end, :], y_train[i:end, :], w, b))
 
             # accuracy
             accuracy = self.accuracy(self.X_train, self.y_train, w, b)
@@ -147,7 +151,11 @@ class Logistic:
             train_accuracy.append(accuracy)
             accuracy = self.accuracy(self.X_validate, self.y_validate, w, b)
             print("validate_acc %f" % accuracy)
+            if epoch and accuracy > max(validate_accuracy):
+                w_best, b_best = w.copy(), b.copy()
             validate_accuracy.append(accuracy)
+
+        print("Test accuracy %f" % self.accuracy(self.X, self.y, w_best, b_best))
 
         plt.subplot(121)
         plt.title("loss")
@@ -176,6 +184,7 @@ class Logistic:
         # print(self.X_validate.shape, self.y_validate.shape)
         # print(self.X.shape, self.y.shape)
 
+        # self.check_gradient()
         self.train()
 
 
