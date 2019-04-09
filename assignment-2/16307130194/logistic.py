@@ -9,10 +9,10 @@ import re
 
 
 class Logistic:
-    alpha = 0.25
-    lamb = 1e-3
+    alpha = 0.1
+    lamb = 1e-4
     train_validate_ratio = 4 / 5
-    epoch = 200
+    epoch = 100
     min_count = 10
 
     def __init__(self, dataset_train, dataset_test):
@@ -28,6 +28,8 @@ class Logistic:
         self.y = self.preprocess_y(dataset_test.target)
 
         self.batch = len(self.X_train)
+        # self.batch = 1
+        # self.batch = 200
 
     def get_vocabulary(self, X_data):
         vocabulary = {}
@@ -114,16 +116,10 @@ class Logistic:
 
     def train(self):
         N, M, K = self.X_train.shape[0], self.X_train.shape[1], self.categories
+
+        print("Start training...")
         w = np.zeros([M, K])
         b = np.zeros(K)
-
-        # print("Start training...")
-        # loss = self.loss(w, b)
-        # loss_list = [loss]
-        # print("First loss: %f" % loss, end=" ")
-        # accuracy = self.accuracy(w, b)
-        # accuracy_list = [accuracy]
-        # print("First accuracy: %f" % accuracy)
         loss = []
         train_accuracy = []
         validate_accuracy = []
@@ -141,10 +137,11 @@ class Logistic:
                 #     print("Wrong gradient!", end=" ")
                 w = w - self.alpha * w_gradient
                 b = b - self.alpha * b_gradient
+                # loss
                 l = self.loss(X_train[i:end, :], y_train[i:end, :], w, b)
                 loss.append(l)
 
-            # accuracy?
+            # accuracy
             accuracy = self.accuracy(self.X_train, self.y_train, w, b)
             print("train_acc %f" % accuracy, end=" ")
             train_accuracy.append(accuracy)
@@ -161,6 +158,8 @@ class Logistic:
         plt.subplot(122)
         plt.plot(np.arange(len(train_accuracy)), train_accuracy, label="train accuracy")
         plt.plot(validate_accuracy, label="validate accuracy")
+        max_index = np.argmax(validate_accuracy)
+        plt.plot(max_index, validate_accuracy[max_index], '^', label="max validate_acc %f" % validate_accuracy[max_index])
         plt.xlabel("epoch")
         plt.ylabel("accuracy")
         plt.legend()
@@ -173,14 +172,9 @@ class Logistic:
 
     def run(self):
         print("Logistic regression:")
-        # print(self.categories)
-        # M, K = self.X_train.shape[1], self.categories
-        # w = np.ones([M, K])
-        # b = np.ones(K)
-        # print(self.X_train.shape, w.shape, b.shape)
+        # print(self.X_train.shape, self.y_train.shape)
+        # print(self.X_validate.shape, self.y_validate.shape)
         # print(self.X.shape, self.y.shape)
-        # w_gradient, b_gradient = self.gradient(self.X_train, self.y_train, w, b)
-        # print(w_gradient.shape, b_gradient.shape)
 
         self.train()
 
@@ -188,13 +182,7 @@ class Logistic:
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
-
+np.random.seed(2333)
 dataset_train, dataset_test = get_text_classification_datasets()
 logistic = Logistic(dataset_train, dataset_test)
 logistic.run()
-# print(len(logistic.y_train))
-# print(logistic.y_train[0])
-# print(logistic.X_train.shape)
-# for i in range(0, 10, 3):
-#     print(i)
-# print(i)
