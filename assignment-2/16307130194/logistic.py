@@ -12,7 +12,7 @@ class Logistic:
     alpha = 0.1
     lamb = 1e-4
     train_validate_ratio = 4 / 5
-    epoch = 50
+    epoch = 1000
     min_count = 10
 
     def __init__(self, dataset_train, dataset_test):
@@ -125,7 +125,8 @@ class Logistic:
         np.random.shuffle(dataset)
         return dataset[:, self.categories:], dataset[:, 0:self.categories]
 
-    def train(self):
+    def train(self, lamb, alpha, batch):
+        self.lamb, self.alpha, self.batch = lamb, alpha, batch
         N, M, K = self.X_train.shape[0], self.X_train.shape[1], self.categories
 
         print("Start training...")
@@ -157,11 +158,15 @@ class Logistic:
 
         print("Test accuracy %f" % self.accuracy(self.X, self.y, w_best, b_best))
 
+        return loss, train_accuracy, validate_accuracy
+
+    def show(self):
+        loss, train_accuracy, validate_accuracy = self.train(self.lamb, self.alpha, self.batch)
+
         plt.subplot(121)
-        plt.title("loss")
         plt.plot(np.arange(len(loss)), loss)
         plt.xlabel("batch")
-        plt.ylabel("loss")
+        plt.title("loss")
 
         plt.subplot(122)
         plt.plot(np.arange(len(train_accuracy)), train_accuracy, label="train accuracy")
@@ -169,7 +174,138 @@ class Logistic:
         max_index = np.argmax(validate_accuracy)
         plt.plot(max_index, validate_accuracy[max_index], '^', label="max validate_acc %f" % validate_accuracy[max_index])
         plt.xlabel("epoch")
-        plt.ylabel("accuracy")
+        plt.title("accuracy")
+        plt.legend()
+        plt.show()
+
+    def show_batch_diff(self):
+        loss0, train_accuracy0, validate_accuracy0 = self.train(self.lamb, self.alpha, 1)
+        loss1, train_accuracy1, validate_accuracy1 = self.train(self.lamb, self.alpha, 20)
+        loss2, train_accuracy2, validate_accuracy2 = self.train(self.lamb, self.alpha, 200)
+        loss3, train_accuracy3, validate_accuracy3 = self.train(self.lamb, self.alpha, len(self.X_train))
+
+        loss_0 = loss0[::int(len(self.X_train) / 1)]
+        loss_1 = loss1[::int(len(self.X_train) / 20)]
+        loss_2 = loss2[::int(len(self.X_train) / 200)]
+        loss_3 = loss3[::int(len(self.X_train) / len(self.X_train))]
+
+        plt.subplot(131)
+        plt.plot(np.arange(len(loss0)), loss0, label="batch size 1")
+        plt.plot(np.arange(len(loss1)), loss1, label="batch size 20")
+        plt.plot(np.arange(len(loss2)), loss2, label="batch size 200")
+        plt.plot(np.arange(len(loss3)), loss3, label="batch size full")
+        plt.xlabel("batch")
+        plt.title("loss")
+        plt.legend()
+
+        plt.subplot(132)
+        plt.plot(np.arange(len(loss_0)), loss_0, label="batch size 1")
+        plt.plot(np.arange(len(loss_1)), loss_1, label="batch size 20")
+        plt.plot(np.arange(len(loss_2)), loss_2, label="batch size 200")
+        plt.plot(np.arange(len(loss_3)), loss_3, label="batch size full")
+        plt.xlabel("epoch")
+        plt.title("loss")
+        plt.legend()
+
+        plt.subplot(133)
+
+        plt.plot(np.arange(len(train_accuracy0)), train_accuracy0, label="train accuracy 1")
+        plt.plot(validate_accuracy0, label="validate accuracy 1")
+        max_index = np.argmax(validate_accuracy0)
+        plt.plot(max_index, validate_accuracy0[max_index], '^', label="max validate_acc 1 %f" % validate_accuracy0[max_index])
+
+        plt.plot(np.arange(len(train_accuracy2)), train_accuracy2, label="train accuracy 200")
+        plt.plot(validate_accuracy2, label="validate accuracy 200")
+        max_index = np.argmax(validate_accuracy2)
+        plt.plot(max_index, validate_accuracy2[max_index], '^',
+                 label="max validate_acc 200 %f" % validate_accuracy2[max_index])
+
+        plt.plot(np.arange(len(train_accuracy3)), train_accuracy3, label="train accuracy full")
+        plt.plot(validate_accuracy3, label="validate accuracy full")
+        max_index = np.argmax(validate_accuracy3)
+        plt.plot(max_index, validate_accuracy3[max_index], '^',
+                 label="max validate_acc full %f" % validate_accuracy3[max_index])
+
+        plt.xlabel("epoch")
+        plt.title("accuracy")
+        plt.legend()
+        plt.show()
+
+    def show_lamb_diff(self):
+        loss0, train_accuracy0, validate_accuracy0 = self.train(1e-6, self.alpha, len(self.X_train))
+        loss1, train_accuracy1, validate_accuracy1 = self.train(1e-4, self.alpha, len(self.X_train))
+        loss2, train_accuracy2, validate_accuracy2 = self.train(1e-2, self.alpha, len(self.X_train))
+        loss3, train_accuracy3, validate_accuracy3 = self.train(1, self.alpha, len(self.X_train))
+
+        plt.subplot(121)
+        plt.plot(np.arange(len(loss0)), loss0, label="lambda 1e-6")
+        plt.plot(np.arange(len(loss1)), loss1, label="lambda 1e-4")
+        plt.plot(np.arange(len(loss2)), loss2, label="lambda 1e-2")
+        plt.plot(np.arange(len(loss3)), loss3, label="lambda 1")
+        plt.xlabel("epoch")
+        plt.title("loss")
+        plt.legend()
+
+        plt.subplot(122)
+
+        plt.plot(np.arange(len(train_accuracy0)), train_accuracy0, label="train accuracy 1e-6")
+        plt.plot(validate_accuracy0, label="validate accuracy 1e-6")
+        max_index = np.argmax(validate_accuracy0)
+        plt.plot(max_index, validate_accuracy0[max_index], '^', label="max validate_acc 1e-6 %f" % validate_accuracy0[max_index])
+
+        plt.plot(np.arange(len(train_accuracy2)), train_accuracy2, label="train accuracy 1e-2")
+        plt.plot(validate_accuracy2, label="validate accuracy 1e-2")
+        max_index = np.argmax(validate_accuracy2)
+        plt.plot(max_index, validate_accuracy2[max_index], '^',
+                 label="max validate_acc 1e-2 %f" % validate_accuracy2[max_index])
+
+        plt.plot(np.arange(len(train_accuracy3)), train_accuracy3, label="train accuracy 1")
+        plt.plot(validate_accuracy3, label="validate accuracy 1")
+        max_index = np.argmax(validate_accuracy3)
+        plt.plot(max_index, validate_accuracy3[max_index], '^',
+                 label="max validate_acc 1 %f" % validate_accuracy3[max_index])
+
+        plt.xlabel("epoch")
+        plt.title("accuracy")
+        plt.legend()
+        plt.show()
+
+    def show_alpha_diff(self):
+        loss0, train_accuracy0, validate_accuracy0 = self.train(self.lamb, 0.001, len(self.X_train))
+        loss1, train_accuracy1, validate_accuracy1 = self.train(self.lamb, 0.01, len(self.X_train))
+        loss2, train_accuracy2, validate_accuracy2 = self.train(self.lamb, 0.1, len(self.X_train))
+        loss3, train_accuracy3, validate_accuracy3 = self.train(self.lamb, 1, len(self.X_train))
+
+        plt.subplot(121)
+        plt.plot(np.arange(len(loss0)), loss0, label="alpha 0.001")
+        plt.plot(np.arange(len(loss1)), loss1, label="alpha 0.01")
+        plt.plot(np.arange(len(loss2)), loss2, label="alpha 0.1")
+        plt.plot(np.arange(len(loss3)), loss3, label="alpha 1")
+        plt.xlabel("epoch")
+        plt.title("loss")
+        plt.legend()
+
+        plt.subplot(122)
+
+        plt.plot(np.arange(len(train_accuracy0)), train_accuracy0, label="train accuracy 0.001")
+        plt.plot(validate_accuracy0, label="validate accuracy 0.001")
+        max_index = np.argmax(validate_accuracy0)
+        plt.plot(max_index, validate_accuracy0[max_index], '^', label="max validate_acc 0.001 %f" % validate_accuracy0[max_index])
+
+        plt.plot(np.arange(len(train_accuracy2)), train_accuracy2, label="train accuracy 0.1")
+        plt.plot(validate_accuracy2, label="validate accuracy 0.1")
+        max_index = np.argmax(validate_accuracy2)
+        plt.plot(max_index, validate_accuracy2[max_index], '^',
+                 label="max validate_acc 0.1 %f" % validate_accuracy2[max_index])
+
+        plt.plot(np.arange(len(train_accuracy3)), train_accuracy3, label="train accuracy 1")
+        plt.plot(validate_accuracy3, label="validate accuracy 1")
+        max_index = np.argmax(validate_accuracy3)
+        plt.plot(max_index, validate_accuracy3[max_index], '^',
+                 label="max validate_acc 1 %f" % validate_accuracy3[max_index])
+
+        plt.xlabel("epoch")
+        plt.title("accuracy")
         plt.legend()
         plt.show()
 
@@ -185,7 +321,10 @@ class Logistic:
         # print(self.X.shape, self.y.shape)
 
         # self.check_gradient()
-        self.train()
+        # self.show()
+        # self.show_batch_diff()
+        # self.show_lamb_diff()
+        self.show_alpha_diff()
 
 
 import ssl
