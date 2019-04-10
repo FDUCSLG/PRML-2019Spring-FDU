@@ -201,11 +201,11 @@ def grad_check(X, y, num_check=10, lamda=0.1, h=1e-5):
         grad_b_ib = grad_b[ib]
         b_error = abs(grad_b_num - grad_b_ib) / (abs(grad_b_num) + abs(grad_b_ib))
 
-        if(w_error > 1e-5 or b_error > 1e-5):
-            print('relative error is too large!')
-            break
         print('grad_W: numerical: %f analytic: %f, relative error: %e' % (grad_w_num, grad_w_iw, w_error))
         print('grad_b: numerical: %f analytic: %f, relative error: %e' % (grad_b_num, grad_b_ib, b_error))
+        if (w_error > 1e-5 or b_error > 1e-5):
+            print('relative error of grad is too large!')
+            return
 
     print('In the test, all the relative errors < 1e-5')
 
@@ -523,7 +523,8 @@ def train_and_test(train_X, train_y, test_X, test_y, lamda, batch_size, eta, n_i
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--method", default='mb', help="train model and test it", choices=['part1', 'fb', 'sb', 'mb'])
+    parser.add_argument("--method", default='mb', help="train model and test it",
+                        choices=['part1', 'grad_check', 'fb', 'sb', 'mb'])
     parser.add_argument("--kcv", help="using k-cross-validation, k=5", action="store_true")
     parser.add_argument("--iter", "-n", help="max epochs of training", default=3000, type=int)
     parser.add_argument("--learning_rate", "-l", default=0.15, type=float)
@@ -564,6 +565,9 @@ def main():
             train_and_test(train_multi_hot, train_one_hot, test_multi_hot, test_one_hot,
                            lamda=args.lamda, batch_size=args.batch, eta=args.learning_rate,
                            n_iter=int(args.iter * args.batch / train_one_hot.shape[0]) + 1, var_size=20)
+    elif(args.method == 'grad_check'):
+        grad_check(train_multi_hot, train_one_hot, 100)
+
 
 if(__name__ == "__main__"):
     main()
