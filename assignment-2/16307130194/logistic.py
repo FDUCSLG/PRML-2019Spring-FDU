@@ -2,7 +2,6 @@ import os
 os.sys.path.append('..')
 
 from matplotlib import pyplot as plt
-from handout import get_text_classification_datasets
 import numpy as np
 import string
 import re

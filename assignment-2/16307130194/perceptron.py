@@ -2,7 +2,6 @@ import os
 os.sys.path.append('..')
 
 from matplotlib import pyplot as plt
-from handout import get_linear_seperatable_2d_2c_dataset
 import numpy as np
 
 
@@ -52,7 +51,3 @@ class Perceptron:
         self.train()
         self.accuracy()
         self.plot()
-
-
-# perceptron = Perceptron(get_linear_seperatable_2d_2c_dataset())
-# perceptron.run()
