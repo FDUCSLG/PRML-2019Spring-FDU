@@ -28,8 +28,6 @@ class Logistic:
         self.y = self.preprocess_y(dataset_test.target)
 
         self.batch = len(self.X_train)
-        # self.batch = 1
-        # self.batch = 200
 
     def get_vocabulary(self, X_data):
         vocabulary = {}
@@ -313,24 +311,3 @@ class Logistic:
         y_pred_index = np.argmax(X @ w + b, axis=1)
         y_index = np.argmax(y, axis=1)
         return sum(y_pred_index == y_index) / len(y_pred_index)
-
-    def run(self):
-        print("Logistic regression:")
-        # print(self.X_train.shape, self.y_train.shape)
-        # print(self.X_validate.shape, self.y_validate.shape)
-        # print(self.X.shape, self.y.shape)
-
-        # self.check_gradient()
-        # self.show()
-        # self.show_batch_diff()
-        # self.show_lamb_diff()
-        self.show_alpha_diff()
-
-
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-
-np.random.seed(2333)
-dataset_train, dataset_test = get_text_classification_datasets()
-logistic = Logistic(dataset_train, dataset_test)
-logistic.run()
