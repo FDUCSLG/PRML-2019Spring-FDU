@@ -14,68 +14,68 @@ def least_squares_classify(X:np.ndarray, y:np.ndarray):
 
 d1 = get_linear_seperatable_2d_2c_dataset()
 y1 = np.eye(2)[d1.y.astype(np.int)]
-#
-# W1 = least_squares_classify(d1.X, y1)
-#
-# x1_test, x2_test = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-# x_test = np.array([x1_test, x2_test]).reshape(2, -1).T
-# y_pred = np.argmax(x_test @ W1, axis = -1)
-#
-# plt.scatter(d1.X[:, 0], d1.X[:, 1], c = d1.y)
-# plt.contourf(x1_test, x2_test, y_pred.reshape(100, 100), alpha = 0.2, levels = np.linspace(0, 1, 3))
-# plt.xlim(-5, 5)
-# plt.ylim(-5, 5)
-# plt.gca().set_aspect('equal', adjustable = 'box')
-# plt.show()
-#
-# y_pred_2 = np.argmax(d1.X @ W1, axis = -1)
-# print(y_pred_2)
-# print(d1.y.astype(np.int))
-#
-# cnt = np.sum(np.abs(y_pred_2 - d1.y.astype(np.int)), 0)
-# print(cnt)
-# print(1 - cnt/len(d1.y))
+
+W1 = least_squares_classify(d1.X, y1)
+
+x1_test, x2_test = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
+x_test = np.array([x1_test, x2_test]).reshape(2, -1).T
+y_pred = np.argmax(x_test @ W1, axis = -1)
+
+plt.scatter(d1.X[:, 0], d1.X[:, 1], c = d1.y)
+plt.contourf(x1_test, x2_test, y_pred.reshape(100, 100), alpha = 0.2, levels = np.linspace(0, 1, 3))
+plt.xlim(-5, 5)
+plt.ylim(-5, 5)
+plt.gca().set_aspect('equal', adjustable = 'box')
+plt.show()
+
+y_pred_2 = np.argmax(d1.X @ W1, axis = -1)
+print(y_pred_2)
+print(d1.y.astype(np.int))
+
+cnt = np.sum(np.abs(y_pred_2 - d1.y.astype(np.int)), 0)
+print(cnt)
+print(1 - cnt/len(d1.y))
 # 0.905
 
 
-# def perceptron(X:np.ndarray, y:np.ndarray, max_epoch = 100):
-#     W = np.zeros(np.size(X, 1))
-#     for _ in range(max_epoch):
-#         N = len(y)
-#         index = np.random.permutation(N)
-#         X = X[index]
-#         y = y[index]
-#         for x, label in zip(X, y):
-#             W += x * label
-#             if (X @ W * y > 0).all():
-#                 break
-#         else:
-#             continue
-#         break
-#     return W
-#
-# y2 = d1.y.astype(np.int) * 2 - 1
-#
-# W2 = perceptron(d1.X, y2)
-#
-# x1_test, x2_test = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-# x_test = np.array([x1_test, x2_test]).reshape(2, -1).T
-# y_pred = (np.sign(x_test @ W2).astype(np.int) + 1) / 2
-#
-# plt.scatter(d1.X[:, 0], d1.X[:, 1], c = d1.y)
-# plt.contourf(x1_test, x2_test, y_pred.reshape(100, 100), alpha = 0.2, levels = np.linspace(0, 1, 3))
-# plt.xlim(-5, 5)
-# plt.ylim(-5, 5)
-# plt.gca().set_aspect('equal', adjustable = 'box')
-# plt.show()
-#
-# y_pred_2 = (np.sign(d1.X @ W2).astype(np.int) + 1) / 2
-# print(y_pred_2)
-# print(d1.y.astype(np.int))
-#
-# cnt = np.sum(np.abs(y_pred_2 - d1.y.astype(np.int)), 0)
-# print(cnt)
-# print(1 - cnt/len(d1.y))
+def perceptron(X:np.ndarray, y:np.ndarray, max_epoch = 100):
+    W = np.zeros(np.size(X, 1))
+    for _ in range(max_epoch):
+        N = len(y)
+        index = np.random.permutation(N)
+        X = X[index]
+        y = y[index]
+        for x, label in zip(X, y):
+            W += x * label
+            if (X @ W * y > 0).all():
+                break
+        else:
+            continue
+        break
+    return W
+
+y2 = d1.y.astype(np.int) * 2 - 1
+
+W2 = perceptron(d1.X, y2)
+
+x1_test, x2_test = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
+x_test = np.array([x1_test, x2_test]).reshape(2, -1).T
+y_pred = (np.sign(x_test @ W2).astype(np.int) + 1) / 2
+
+plt.scatter(d1.X[:, 0], d1.X[:, 1], c = d1.y)
+plt.contourf(x1_test, x2_test, y_pred.reshape(100, 100), alpha = 0.2, levels = np.linspace(0, 1, 3))
+plt.xlim(-5, 5)
+plt.ylim(-5, 5)
+plt.gca().set_aspect('equal', adjustable = 'box')
+plt.show()
+
+y_pred_2 = (np.sign(d1.X @ W2).astype(np.int) + 1) / 2
+print(y_pred_2)
+print(d1.y.astype(np.int))
+
+cnt = np.sum(np.abs(y_pred_2 - d1.y.astype(np.int)), 0)
+print(cnt)
+print(1 - cnt/len(d1.y))
 # 0.84
 
 
