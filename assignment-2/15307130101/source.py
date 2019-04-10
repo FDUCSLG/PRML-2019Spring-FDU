@@ -1,7 +1,7 @@
 import os
 os.sys.path.append('..')
 # use the above line of code to surpass the top module barrier
-from handout import gen_linear_seperatable_2d_2c_dataset
+from handout import gen_linear_seperatable_2d_2c_dataset, get_text_classification_datasets
 import numpy as np
 import matplotlib.pyplot as plt
 import math
