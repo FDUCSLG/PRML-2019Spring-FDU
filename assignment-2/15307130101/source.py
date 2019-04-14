@@ -225,10 +225,15 @@ def Perceptron(dataset,epoch,batch_size,l_rate,plt):
 Perceptron(d,100,10,0.01,plt)
 
 
-import string
-categories,dataset_train_p2,dataset_test_p2=get_text_classification_datasets()
+## PART 2
 
-type(dataset_train_p2)
+import string
+from handout import get_linear_seperatable_2d_2c_dataset,get_text_classification_datasets
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+categories,dataset_train_p2,dataset_test_p2=get_text_classification_datasets()
 
 def document_embeding(dataset_train):
     ## build list of string from train data
@@ -257,50 +262,141 @@ def document_embeding(dataset_train):
             v[vocabulary[e]]=1
         multi_hot_v.append(v)
         #print (v)
-    
+    return np.mat(multi_hot_v),vocabulary
+multi_hot_v,vocabulary=document_embeding(dataset_train_p2)
 
-def categories_embedding(categories):
-    categories_vec_map={}
-    for index,ele in enumerate(categories):
-        v=[0 for i in range(len(categories))]
-        v[index]=1
-        categories_vec_map[ele]=v
-    return categories_vec_map
+## K is the number of kinds also number of columns
+def categories_embedding(target,K):
+    one_hot = np.zeros((len(target), K))
+    for i, column in enumerate(target):
+        one_hot[i][column] = 1
+    return np.mat(one_hot)
 
+def softmax(x):
+    return np.exp(x)/(np.sum(np.exp(x), axis = 1))
 
-r=categories_embedding(categories)
-print(r)
-
-## X, each row is a datapoint，d dimension, N row(N*d)
-## W, have 4 row/kind and d column(4*d)
-##y_n each row is a one-hot vectory and N row according with X(N*4)
-## b (4*1)  (1*4) in numpy
 class Pa_xia:
-    
-    def __init__(self,W,X,y_n,b):
-        self.d=len(X[0])
+    def __init__(self,W,X,y_n,b,lambd):
+        self.y_hat=softmax(X * W.T + b.T)
+        #print("w",W)
         self.X=X
         self.y_n=y_n
-        self.M=((np.dot(W,X.T)).T+b).T  ## 按列加b
-        self.Divider=np.sum(np.exp(self.M),axis=0)
-    def pa_xia_w(self,i,j):
-        R=np.zeros(self.M.shape)+np.exp(self.M[i])*self.X[:,j]
-        R[i]=R[i]+(self.Divider-np.exp(self.M[i])*2)*self.X[:,j]
-        R=R/self.Divider
-        return -np.trace(np.dot(self.y_n,R))/self.d  ## divide N
+        self.lambd=lambd
+        self.W=W
         
-    def pa_xia_b(self,i):
-        R=np.zeros(self.M.shape)+np.exp(self.M[i])
-        R[i]=R[i]+(self.Divider-np.exp(self.M[i])*2)
-        R=R/self.Divider
-        return -np.trace(np.dot(self.y_n,R))/self.d  ## divide N
+    def pa_xia_w(self):
+        #print("gradient w, x.shape[0]: ",self.X.shape[0])
+        #print("y_hat :",self.y_hat)
+        gradient = - self.X.T * (self.y_n - self.y_hat) / self.X.shape[0]+(2 * self.lambd * self.W).T
+        return gradient
     
-W=np.array([[1],[0],[0],[0]])
-X=np.array([[1]])
-y_n=np.array([[0,0,1,0]])
-b=np.array([[1,2,3,4]])
+    def pa_xia_b(self):
+        #print("gradient b, self.x.shape[0]",self.X.shape[0])
+        gradient = (- np.sum((self.y_n - self.y_hat), axis = 0) / self.X.shape[0]).T
+        return gradient
 
-p=Pa_xia(W,X,y_n,b)
-print(p.pa_xia_b(1))
 
+# W k*d
+# target must be in vector
+def cross_entropy_loss(X,target,W,b):
+    #print("w",str(W.shape))
+    #print("b",str(b.shape))
+    #print("x",str(X.shape))
+    y_hat=np.dot(W,X.T)+b ##z 一列
+    y_hat=np.exp(y_hat)
+    divider=np.sum(y_hat,axis=1)
+    y_hat=y_hat/divider
+    y_hat=np.log(y_hat)
+    N=X.shape[0]
+    loss=-np.trace(target*y_hat)/N
+    return loss
     
+    
+def logistic_regression(X,target,l_rate,lambd,batch_size=1,iteration=100,epsilon=0.0001):
+    N=X.shape[0]
+    d=X.shape[1]
+    K=4
+    W=np.mat(0.1*np.random.rand(K,d))
+    b=np.mat(0.1*np.random.rand(K,1))
+    target_v=categories_embedding(target,K)
+    new_loss=cross_entropy_loss(X, target_v, W, b)
+    loss_history=[]
+    loss_history.append(new_loss)
+    while True:
+        old_Loss = new_loss
+        iteration-=1
+        for i in range(0, N, batch_size):
+            last_entry=min(i+batch_size,N)
+            p=Pa_xia(W,np.mat(X[i:last_entry]),np.mat(target_v[i:last_entry]),np.mat(b),lambd)
+            w_gradient=p.pa_xia_w()
+            b_gradient = p.pa_xia_b()
+            #print("b",b_gradient)
+            #print("w",w_gradient)
+            delta_w=l_rate * w_gradient
+            W=W-delta_w.T
+            delta_b=l_rate * b_gradient
+            b=b-delta_b
+            
+        new_Loss = cross_entropy_loss(X, target_v, W, b)
+        #print("new loss",new_loss)
+        loss_history.append(new_Loss)
+        print("Loss at iteration %d: %f"%(iteration, new_Loss))
+        if old_Loss - new_Loss < epsilon or iteration < 0:
+            break
+        ##X_T = np.hstack((X, target))
+        ##np.random.shuffle(X_T)
+        ##X = X_T[0:N, 0:d].copy()
+        ##target = X_T[0:N, d].copy()
+        ##target_v=categories_embedding(target,K)
+    return W,b,loss_history
+W,B,loss_history_1=logistic_regression(X=multi_hot_v,target=dataset_train_p2.target,l_rate=1.5,lambd=0,batch_size=100,iteration=200,epsilon=0.01)
+#X,target,l_rate,lambd,batch_size=1,iteration=100,epsilon=0.0001
+print(loss_history_1)
+
+
+x_axis=[i for i in range(len(loss_history_1))]
+plt.plot(x_axis,loss_history_1)
+plt.xlabel("#epoch")
+plt.title("Picture 6 trainning losss")
+
+W,B,loss_history_2=logistic_regression(X=multi_hot_v,target=dataset_train_p2.target,l_rate=1.5,lambd=0,batch_size=50,iteration=200,epsilon=0.01)
+print(loss_history_2)
+
+x_axis=[i for i in range(len(loss_history_1))]
+l1=plt.plot(x_axis,loss_history_1,label = 'batch=100')
+l2=plt.plot(x_axis,loss_history_2,label = 'batch=50', color = 'red')
+plt.xlabel("#epoch")
+plt.title("Picture 7 trainning losss comparison")
+plt.legend()
+
+def vectorizing(dataset_test,vocabulary):
+    ## build list of string from test data
+    list_of_string=[]
+    tokenized_sentences=[]
+    trainslator=str.maketrans(string.punctuation,' '*len(string.punctuation))
+    for ele in dataset_test.data:
+        # remove repeated data in one line
+        sentence=list(set(ele.lower().translate(trainslator).replace(string.whitespace,' ').split()))
+        tokenized_sentences.append(sentence)
+        list_of_string+=sentence
+
+    ## build multi-hot vec
+    multi_hot_v=[]
+    for ele in tokenized_sentences:
+        v=[0 for i in range(len(vocabulary))]
+        for e in ele:
+            if e in vocabulary.keys():
+                v[vocabulary[e]]=1
+        multi_hot_v.append(v)
+        #print (v)
+    return np.mat(multi_hot_v)
+        
+test_multi_hot_v=vectorizing(dataset_test_p2,vocabulary)
+
+def Accuracy(X, target, W, b):
+    N = X.shape[0]
+    y_hat = softmax(X * W.T + b.T)
+    return np.sum(np.argmax(y_hat, axis = 1).flatten() == target) / N
+a=Accuracy(test_multi_hot_v,dataset_test_p2.target,W,B)
+
+print("test accuracy: ",a)
