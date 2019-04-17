@@ -47,7 +47,6 @@ def get_text_classification_datasets():
     print('Categories:', len(dataset_test.target_names))
     return dataset_train, dataset_test
 
-
 if __name__ == "__main__":
     d = get_linear_seperatable_2d_2c_dataset()
     d.plot(plt).show()
