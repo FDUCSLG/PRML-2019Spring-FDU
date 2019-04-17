@@ -53,7 +53,7 @@ def get_text_classification_datasets():
     print("In testing dataset:")
     print('Samples:', len(dataset_test.data))
     print('Categories:', len(dataset_test.target_names))
-    return dataset_train,dataset_test
+    return categories,dataset_train,dataset_test
 
 d = get_linear_seperatable_2d_2c_dataset()
 d.plot(plt).show()
