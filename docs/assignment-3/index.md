@@ -56,7 +56,7 @@ The training of the model stops when it could not get better in predicting the n
 $$
 \begin{align}
 PP(S)&=P(s_1s_2\cdots s_N|LM)^{-1/N}\\
-&=\sqrt[N]{{1\over \prod_{i=t}^{N}\mathbf{y}_t^{(s_{t+1})}}}
+&=\sqrt[N]{\frac{1}{ \prod_{i=t}^{N}\mathbf{y}_t^{(s_{t+1})}}}
 \end{align}
 $$
 The perplexity should be evaluated on the whole development dataset, which is to split the dataset by length $sl$ which is the sentence length used in the training stage, and then evaluate the average perplexity on all the split sentences. Use early stop when perplexity don't improve.
