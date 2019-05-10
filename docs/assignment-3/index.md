@@ -4,7 +4,7 @@
 
 <center>Assignment 3</center>
 
-In this assignment you are going to implement a RNN (namely LSTM) for generating Tang poetry. This assignment description will outline the landscape for you to know how to do it!
+In this assignment you are going to implement a RNN (namely LSTM) for generating Tang poetry. This assignment description will outline the landscape for you to know how to do it! You'll also get yourself familiar with PyTorch and FastNLP once you complete this assignment, their docs are very recommended for you to get started, and you could also try out some examples included in their code repository.
 
 #### Description
 
@@ -42,7 +42,9 @@ Requirements
 
 In this part you are going to implement an LSTM to build a language model to generate Tang poetry.
 
-You are given a small dataset containing some Tang poems, you first split the dataset to a training dataset and development dataset, we would recommend an 80% and 20% split. Then you create a vocabulary containing all the words (or characters, but we stick to use words to refer to them) in the training dataset, be aware that you might want to insert a new word `EOS` and a special token  `OOV` for unknown word (or known as out-of-vocabulary word). To process the dataset, you should transform the poems into a sequence of integer representing words in the vocabulary. Then you could randomly crop the sequence into batches of short sequences for the training of the LSTM. Note that at each step a single input of the LSTM should be a vector, we should create a mapping from integers to vectors, this step is also known as **embedding** in NLP. And follow the previous discussion we could come to a loss function that could provide gradient to the parameters and also the embedding (as you could either fix the embedding to its initialization or update it with the gradient).
+You are given a small dataset containing some Tang poems, you first split the dataset to a training dataset and development dataset, we would recommend an 80% and 20% split. Then you create a vocabulary containing all the words (or characters, but we stick to use words to refer to them) in the training dataset, be aware that you might want to insert a new word `EOS` and a special token  `OOV` for unknown word (or known as out-of-vocabulary word). To process the dataset, you should transform the poems into a sequence of integer representing words in the vocabulary. Then you could randomly crop the sequence into batches of short sequences for the training of the LSTM. Note that at each step a single input of the LSTM should be a vector, we should create a mapping from integers to vectors, this step is also known as **embedding** in NLP. You are encouraged to use [vocabulary](<https://github.com/fastnlp/fastNLP/blob/master/fastNLP/core/vocabulary.py>), [dataset](<https://github.com/fastnlp/fastNLP/blob/master/fastNLP/core/dataset.py>) from FastNLP to implemented yours vocabulary.
+
+Follow the previous discussion we could come to a loss function that could provide gradient to the parameters and also the embedding (as you could either fix the embedding to its initialization or update it with the gradient).
 
 As the model is pretty clear here, you should include the hyperparameter and training setting your are using in your report. They are
 
@@ -59,11 +61,13 @@ PP(S)&=P(s_1s_2\cdots s_N|LM)^{-1/N}\\
 &=\sqrt[N]{\frac{1}{ \prod_{i=t}^{N}\mathbf{y}_t^{(s_{t+1})}}}
 \end{align}
 $$
-The perplexity should be evaluated on the whole development dataset, which is to split the dataset by length $sl$ which is the sentence length used in the training stage, and then evaluate the average perplexity on all the split sentences. Use early stop when perplexity don't improve.
+The perplexity should be evaluated on the whole development dataset, which is to split the dataset by length $sl$ which is the sentence length used in the training stage, and then evaluate the average perplexity on all the split sentences. Use early stop when perplexity don't improve. You should try [trainer.py](<https://github.com/fastnlp/fastNLP/blob/master/fastNLP/core/trainer.py>) from FastNLP to this end, as early stop are already implemented in it.
 
 To generate a Tang poem once you got the model trained, you could first sample a word to start and then use it as input to the LSTM, and them sample from the output of the LSTM and in turn send the generated word into the LSTM to have the next word generated. To allow more variation, sometimes people use a **temperature term $\tau$** in the sofmax to control the diversity of generation, for example use $\tau=0.6$ to make it more variant than $\tau=1$.
 
 Above all, you might find [this artical](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) great to help understand the task, where the author implemented a vanilla RNN language model to generate not only poems, but also linux kernel code. 
+
+
 
 Requirements
 
@@ -71,6 +75,12 @@ Requirements
 2. Generating Tang poem. Implement an LSTM to generate poems. Report the perplexity after your training, and generate poems that start with 日 、红、山、夜、湖、海、月, include the poem in your report. You are allowed to implement the LSTM with PyTorch but you should not relying on the LSTM cell or LSTM provided by it, just use its autograd module to help you deal with your gradient. Also you are not strictly required to follow everything described above, as long as you can make yourself clear in the report, you can use whatever setting that you believe is more appropriate for the task of generating poems. You might find [this paper](<https://www.aclweb.org/anthology/D14-1074>) very helpful. 50%
    Bonus: you will earn up to 20% bonus (making the full mark 120% of this assignment) if you implement the gradient calculation and back propagation by yourself with numpy. Because you've implemented the LSTM in PyTorch you will have something to compare your gradient to, this will help you for gradient check. You might also use external data such as [全唐诗](<https://github.com/chinese-poetry/chinese-poetry>) to help your generation, this will be also be considered as bonus.
 3. Optimization. We haven't mentioned how should you optimize your model, but of course you should use gradient descent. There are a lot of gradient descent algorithms that you could explore, a non inclusive name list: stochastic gradient descent, SGD with momentum [^2], Nesterov[^3], Adagrad[^4], Adadelta[^5], Adam[^6] etc. You should try at least two optimization algorithm to training your model. Note that as some of the algorithms require you to keep additional parameters across batches, **you should think about how it will influence the way you implement your gradient calculation** if you intended for the 20% bonus in the previous requirements. Include your comparison of the algorithms you've used in your report. 20%
+
+Clarification
+
+1. If you have not used PyTorch and FastNLP, you might find it challenging to finish the assignment, but you should try your best to make it and include your effort in your report, even if you did not finish the given goal of the task, as long as you tried hard, your effort will be marked. For example if you find using FastNLP hard, you could include your comment for improvements in your report.
+2. Please do get your self familiar with PyTorch and FastNLP because in the subsequent assignment and the final project, you must use them to finish the task.
+3. In the bonus, you only have to show case that your numpy LSTM is workable (for example by showing that its gradient matches the gradient from PyTorch version or it could overfit the training dataset), and you don't have to stick to use it for other tasks.
 
 [^Hochreiter & Schmidhuber (1997)]:http://www.bioinf.jku.at/publications/older/2604.pdf
 [^ 2]: Qian, N. (1999). On the momentum term in gradient descent learning algorithms. Neural Networks : The Official Journal of the International Neural Network Society, 12(1), 145–151. <http://doi.org/10.1016/S0893-6080(98)00116-6>
