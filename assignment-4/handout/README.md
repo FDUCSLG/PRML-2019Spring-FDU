@@ -1,0 +1,1 @@
+You should use the data provided from the second assignment, you could import that function to your work directory by including '../../assignment-2/handout' in your python path or just copy that function to your solution.
