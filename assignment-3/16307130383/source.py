@@ -46,7 +46,7 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
         seq = ""
   # seq to int
   xs, ys = seq_to_int(vocab, sequences)
-  return words, vocab, sequences, xs, ys
+  return list(words), vocab, sequences, xs, ys  # translate words into list
 
 def seq_to_int(vocab, sequences):
   xs = []
@@ -68,13 +68,15 @@ def seq_to_int(vocab, sequences):
 # LSTM model
 #####################
 class LSTM(nn.Module):
-  def __init__(self, input_dim, hidden_dim, batch_size, output_dim=1,
+  def __init__(self, vocab_size, input_dim, hidden_dim, batch_size, output_dim=1,
                   num_layers=2):
     super(LSTM, self).__init__()
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
     self.batch_size = batch_size
     self.num_layers = num_layers
+    # Embedding fn
+    self.embed = nn.Embedding(vocab_size, self.input_dim)
     # Define the LSTM layer
     self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
     # Define the output layer
@@ -86,6 +88,8 @@ class LSTM(nn.Module):
             torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
   def forward(self, input):
+    # embed input
+    input = self.embed(input)
     # Forward pass through LSTM layer
     # shape of lstm_out: [input_size, batch_size, hidden_dim]
     # shape of self.hidden: (a, b), where a and b both 
@@ -93,61 +97,129 @@ class LSTM(nn.Module):
     lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))
     # linear to dim-V, then softmax
     y_pred = self.linear(lstm_out.view(len(input), self.batch_size, -1))
+    # softmax
     y_pred = nn.functional.softmax(y_pred, dim=2)
     return y_pred
 
 #####################
 # Init
 #####################
-seq_len = 48
-sample_size = 128
+seq_len = 48  # 句长
+sample_size = 2048  # 诗个数
 words, vocab, sequences, X_int, y_int = get_vocab_seqs(sample_size, seq_len)
-input_dim = len(vocab)
-hidden_dim = input_dim
-batch_size = 64
-output_dim = input_dim
+vocab_size = len(words)
+input_dim = 256  # 单个字向量长
+hidden_dim = 256
+batch_size = 32
+output_dim = vocab_size
 num_layers = 2
-model = LSTM(input_dim=input_dim, hidden_dim=hidden_dim, 
+model = LSTM(vocab_size=vocab_size, input_dim=input_dim, hidden_dim=hidden_dim, 
         batch_size=batch_size, output_dim=output_dim, num_layers=num_layers)
-# X_train and y_train & target
-X_transpose = np.array(X_int[:batch_size]).transpose()
-X_onehot = np.eye(input_dim)[X_transpose]
-X_train = torch.from_numpy(X_onehot).type(torch.Tensor)
-y_transpose = np.array(y_int[:batch_size]).transpose()
-y_train = torch.from_numpy(y_transpose).type(torch.LongTensor)
-target = y_train.contiguous().view(-1)
+# # X_train and y_train & target
+# X_transpose = np.array(X_int[:batch_size]).transpose()
+# X_onehot = np.eye(input_dim)[X_transpose]
+# X_train = torch.from_numpy(X_onehot).type(torch.Tensor)
+# y_transpose = np.array(y_int[:batch_size]).transpose()
+# y_train = torch.from_numpy(y_transpose).type(torch.LongTensor)
+# target = y_train.contiguous().view(-1)
 # loss_fn and optimiser
 loss_fn = torch.nn.CrossEntropyLoss(reduction='sum')
-learning_rate = 0.001
+learning_rate = 0.01
 optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
+# claim globally
+X_train = []
+y_train = []
+hist = []
+batch_start = 0
 
 def get_var():
-  return {'X': X_train, 'y': y_train, 'V': vocab, 'seq': sequences, 'm': model, 'w': words}
+  return {'X': X_train, 'y': y_train, 'V': vocab, 'seq': sequences, 'm': model, 'w': words, 'h': hist}
 
 #####################
 # Trainer
 #####################
 def train(num_epochs):
+  global hist
   hist = np.zeros(num_epochs)
   for t in range(num_epochs):
-      # Clear stored gradient
-      model.zero_grad()
-      # Initialise hidden state
-      # Don't do this if you want your LSTM to be stateful
-      model.hidden = model.init_hidden()
-      # Forward pass
-      y_pred = model(X_train)
-      # compute loss
-      output = y_pred.view(-1, input_dim)
-      loss = loss_fn(output, target)
-      hist[t] = loss.item()
-      # if t % 100 == 0:
+    global batch_start
+    # batch_start = (batch_start + batch_size) % len(X_int)
+    # 保证 l r 不会横跨末尾
+    if batch_start < batch_size:
+      batch_start += batch_size
+    l = batch_start - batch_size
+    r = batch_start
+    # X_train and y_train & target
+    global X_train
+    global y_train
+    X_transpose = np.array(X_int[l:r]).transpose()
+    X_train = torch.from_numpy(X_transpose).type(torch.LongTensor)
+    y_transpose = np.array(y_int[l:r]).transpose()
+    y_train = torch.from_numpy(y_transpose).type(torch.LongTensor)
+    target = y_train.contiguous().view(-1)
+    # Clear stored gradient
+    model.zero_grad()
+    # Initialise hidden state
+    # Don't do this if you want your LSTM to be stateful
+    model.hidden = model.init_hidden()
+    # Forward pass
+    y_pred = model(X_train)
+    # compute loss
+    output = y_pred.view(-1, vocab_size)
+    loss = loss_fn(output, target)
+    hist[t] = loss.item()
+    if t % 32 == 0:
+      print("from ", l, " to ", r)
       print("Epoch ", t, "CE: ", loss.item())
-      # Zero out gradient, else they will accumulate between epochs
-      optimiser.zero_grad()
-      loss.backward()
-      # Update parameters
-      optimiser.step()
+      print("sample input: ", translate_int(X_int[l]))
+      print("sample output: ", translate_vec(y_pred.detach().numpy().transpose().tolist()[0]))
+      print(y_pred[0])
+    # Zero out gradient, else they will accumulate between epochs
+    optimiser.zero_grad()
+    # backward
+    loss.backward()
+    # Update parameters
+    optimiser.step()
+
+def translate_int(sentence):  # only accept list
+  seq = ""
+  for idx in sentence:
+    seq += words[idx]
+  return seq
+
+def translate_vec(sentence):  # only accept list
+  seq = ""
+  for vec in sentence:
+    idx = np.argmax(vec)
+    seq += words[idx]
+  return seq
+
+def generate(seed=None, length=48):
+  # set up first char
+  start = [[ random.randint(0, vocab_size-1) ]]
+  if not seed is None:
+    if seed in words:
+      start = [[ vocab[seed] ]]
+    else:
+      start = [[ vocab['OOV'] ]]
+  start = torch.LongTensor(start)
+  # init hidden
+  model.hidden = (torch.zeros(model.num_layers, 1, model.hidden_dim),  # batch_size is 1
+                  torch.zeros(model.num_layers, 1, model.hidden_dim))
+  # generate
+  seq = ""
+  seq += translate_int(start.numpy().tolist()[0])
+  for i in range(length):
+    start = model.embed(start)
+    lstm_out, model.hidden = model.lstm(start.view(1, 1, -1))  # seq_len=1, batch_size=1
+    y_pred = model.linear(lstm_out.view(1, 1, -1))
+    y_pred = nn.functional.softmax(y_pred, dim=2)
+    # get next
+    print(y_pred[0])
+    next_char = translate_vec(y_pred.detach().numpy().transpose().tolist()[0])
+    seq += next_char
+    start = torch.LongTensor([[ vocab[next_char] ]])
+  print(seq)
 
 # >>> target = torch.empty(1, dtype=torch.long).random_(10)
 # >>> target
