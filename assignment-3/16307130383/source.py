@@ -6,6 +6,7 @@ import sys
 sys.path.append('../')
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
@@ -65,7 +66,7 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
             count[word] += 1
           else:
             count[word] = 0
-    words = set([ x for x in words if count[x] > 1 ])  # at least occur 2 times
+    words = set([ x for x in words if count[x] > 0 ])  # at least one time
     words = list(words)
     vocab = {word: i for i, word in enumerate(words)}
     # cut into fix length sentence
@@ -88,7 +89,7 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
       pickle.dump(sequences, fp)
   # seq to int
   xs, ys = seq_to_int(vocab, sequences)
-  return count, words, vocab, sequences, xs, ys  # translate words into list
+  return count, words, vocab, sequences, xs, ys
 
 def seq_to_int(vocab, sequences):
   xs = []
@@ -125,29 +126,27 @@ class LSTM(nn.Module):
     self.linear = nn.Linear(self.hidden_dim, output_dim)
 
   def init_hidden(self):
-    # This is what we'll initialise our hidden state as
-    return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
-            torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
+    # return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
+    #         torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
+    return Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
   def forward(self, input):
     # embed input
     input = self.embed(input)
-    # Forward pass through LSTM layer
-    # shape of lstm_out: [input_size, batch_size, hidden_dim]
-    # shape of self.hidden: (a, b), where a and b both 
-    # have shape (num_layers, batch_size, hidden_dim).
-    lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))
+    # Forward pass
+    lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))  # lstm_out shape [input_size, batch_size, hidden_dim]
     # linear to dim-V, then softmax
     y_pred = self.linear(lstm_out.view(len(input), self.batch_size, -1))  # shape [seq_len, batch_size, output_len]
     # softmax
-    y_pred = nn.functional.softmax(y_pred, dim=2)
+    # don't have to, cause CE already have
+    # y_pred = nn.functional.softmax(y_pred, dim=2)
     return y_pred
 
 #####################
 # Init
 #####################
 seq_len = 48  # 句长
-sample_size = 2000  # 诗个数
+sample_size = 2048  # 诗个数
 word_count, words, vocab, sequences, X_int, y_int = get_vocab_seqs(sample_size, seq_len)
 vocab_size = len(words)
 input_dim = 256  # 输入向量长
@@ -201,8 +200,9 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
     model.hidden = model.init_hidden()
     # Forward pass
     y_pred = model(X_train)
-    # compute loss
+    # reshape output
     output = y_pred.view(-1, vocab_size)
+    # computeloss
     loss = loss_fn(output, target)
     hist[t] = loss.item()
     # print
@@ -221,7 +221,7 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
 #####################
 # Generate
 #####################
-def generate(seed=None, length=48):
+def generate(seed=None, length=48, temperature=0.8):
   # set up first char
   start = [[ random.randint(0, vocab_size-1) ]]
   if not seed is None:
@@ -232,21 +232,22 @@ def generate(seed=None, length=48):
       start = [[ vocab['OOV'] ]]
   start = torch.LongTensor(start)
   # init hidden
-  model.hidden = (torch.zeros(model.num_layers, 1, model.hidden_dim),  # batch_size is 1
-                  torch.zeros(model.num_layers, 1, model.hidden_dim))
+  model.hidden = model.init_hidden()
   # generate
   seq = ""
-  seq += translate_int(start.numpy().tolist()[0])
+  seq += translate_int([ start ])
   for i in range(length):
     start = model.embed(start)
     lstm_out, model.hidden = model.lstm(start.view(1, 1, -1))  # seq_len=1, batch_size=1
     y_pred = model.linear(lstm_out.view(1, 1, -1))
-    y_pred = nn.functional.softmax(y_pred, dim=2)
+    # according to temperature softmax
+    predict = y_pred.data.view(-1).div(temperature).exp()
+    predict = torch.multinomial(predict, 1)[0]
     # get next
-    # print(y_pred[0])
-    next_char = translate_vec( y_pred.detach().permute(1, 0, 2).numpy().tolist()[0] )
+    next_char = translate_int([ predict ])
     seq += next_char
-    start = torch.LongTensor([[ vocab[next_char] ]])
+    # use predict as start
+    start = predict
   print(seq)
 
 #####################
