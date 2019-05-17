@@ -44,14 +44,14 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
   count = {}
   vocab = {}
   sequences = []
-  if os.path.exists('words.list'):
-    with open('words.list', 'rb') as fp:
+  if os.path.exists(str(sample_size)+'words.list'):
+    with open(str(sample_size)+'words.list', 'rb') as fp:
       words = pickle.load(fp)
-    with open('count.dict', 'rb') as fp:
+    with open(str(sample_size)+'count.dict', 'rb') as fp:
       count = pickle.load(fp)
-    with open('vocab.dict', 'rb') as fp:
+    with open(str(sample_size)+'vocab.dict', 'rb') as fp:
       vocab = pickle.load(fp)
-    with open('sequences.list', 'rb') as fp:
+    with open(str(sample_size)+'sequences.list', 'rb') as fp:
       sequences = pickle.load(fp)
   else:
     # create vocab
@@ -78,13 +78,13 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
           sequences.append(seq[:seq_lenth])
           seq = ""
     # write to disk
-    with open('words.list', 'wb') as fp:
+    with open(str(sample_size)+'words.list', 'wb') as fp:
       pickle.dump(words, fp)
-    with open('count.dict', 'wb') as fp:
+    with open(str(sample_size)+'count.dict', 'wb') as fp:
       pickle.dump(count, fp)
-    with open('vocab.dict', 'wb') as fp:
+    with open(str(sample_size)+'vocab.dict', 'wb') as fp:
       pickle.dump(vocab, fp)
-    with open('sequences.list', 'wb') as fp:
+    with open(str(sample_size)+'sequences.list', 'wb') as fp:
       pickle.dump(sequences, fp)
   # seq to int
   xs, ys = seq_to_int(vocab, sequences)
@@ -138,7 +138,7 @@ class LSTM(nn.Module):
     # have shape (num_layers, batch_size, hidden_dim).
     lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))
     # linear to dim-V, then softmax
-    y_pred = self.linear(lstm_out.view(len(input), self.batch_size, -1))
+    y_pred = self.linear(lstm_out.view(len(input), self.batch_size, -1))  # shape [seq_len, batch_size, output_len]
     # softmax
     y_pred = nn.functional.softmax(y_pred, dim=2)
     return y_pred
@@ -147,7 +147,7 @@ class LSTM(nn.Module):
 # Init
 #####################
 seq_len = 48  # 句长
-sample_size = 8000  # 诗个数
+sample_size = 2000  # 诗个数
 word_count, words, vocab, sequences, X_int, y_int = get_vocab_seqs(sample_size, seq_len)
 vocab_size = len(words)
 input_dim = 256  # 输入向量长
@@ -160,7 +160,6 @@ model = LSTM(vocab_size=vocab_size, input_dim=input_dim, hidden_dim=hidden_dim,
 # loss_fn & optimiser 
 loss_fn = torch.nn.CrossEntropyLoss(reduction='sum')
 learning_rate = 0.01
-optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
 # claim globally
 X_train_array = []
 target_array = []
@@ -183,15 +182,13 @@ def get_var():
 #####################
 # Trainer
 #####################
-def train(num_epochs, batch_end=len(X_train_array)):
+def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate=8):
   global hist
   hist = np.zeros(num_epochs)
+  # adjust learning rate
+  optimiser = torch.optim.Adam(model.parameters(), lr=lr)
+  # optimiser = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
   for t in range(num_epochs):
-    # # adjust learning rate
-    # if t == 100:
-    #   global optimiser
-    #   for g in optimiser.param_groups:
-    #     g['lr'] = 0.002
     # get batch
     global X_train_array
     global target_array
@@ -201,7 +198,6 @@ def train(num_epochs, batch_end=len(X_train_array)):
     # Clear stored gradient
     model.zero_grad()
     # Initialise hidden state
-    # Don't do this if you want your LSTM to be stateful
     model.hidden = model.init_hidden()
     # Forward pass
     y_pred = model(X_train)
@@ -209,15 +205,12 @@ def train(num_epochs, batch_end=len(X_train_array)):
     output = y_pred.view(-1, vocab_size)
     loss = loss_fn(output, target)
     hist[t] = loss.item()
-    if t % 16 == 0:
+    # print
+    if t % print_rate == 0:
       print("batch num: ", batch_num)
       print("Epoch ", t, "CE: ", loss.item())
       print("sample input: ", translate_int( X_train.numpy().transpose().tolist()[0] ))
       print("sample output: ", translate_vec( y_pred.detach().permute(1, 0, 2).numpy().tolist()[0] ))
-      # print("sample input: ", translate_int( X_train.numpy().transpose().tolist()[1] ))
-      # print("sample output: ", translate_vec( y_pred.detach().permute(1, 0, 2).numpy().tolist()[1] ))
-      # print(y_pred.detach().permute(1, 0, 2).shape)
-      # print(X_train.shape)
     # Zero out gradient, else they will accumulate between epochs
     optimiser.zero_grad()
     # backward
@@ -234,7 +227,7 @@ def generate(seed=None, length=48):
   if not seed is None:
     if seed in words:
       start = [[ vocab[seed] ]]
-      print( vocab[seed] )
+      # print( vocab[seed] )
     else:
       start = [[ vocab['OOV'] ]]
   start = torch.LongTensor(start)
