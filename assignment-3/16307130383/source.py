@@ -28,13 +28,14 @@ def load_json():
   # write to disk
   with open('paragraphs.list', 'wb') as fp:
     pickle.dump(paragraphs, fp)
+  return paragraphs
 
 paragraphs = []
 if os.path.exists('paragraphs.list'):
   with open ('paragraphs.list', 'rb') as fp:
     paragraphs = pickle.load(fp)
 else:
-  load_json()
+  paragraphs = load_json()
 
 #####################
 # Preprocess
@@ -70,14 +71,7 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
     words = list(words)
     vocab = {word: i for i, word in enumerate(words)}
     # cut into fix length sentence
-    sequences = []
-    for paragraph in paragraphs[:sample_size]:
-      seq = ""
-      for sentence in paragraph:
-        seq += sentence
-        if len(seq) >= seq_lenth:
-          sequences.append(seq[:seq_lenth])
-          seq = ""
+    sequences = para_to_seq(paragraphs, sample_size, seq_lenth)
     # write to disk
     with open(str(sample_size)+'words.list', 'wb') as fp:
       pickle.dump(words, fp)
@@ -90,6 +84,17 @@ def get_vocab_seqs(sample_size=1000, seq_lenth=48):
   # seq to int
   xs, ys = seq_to_int(vocab, sequences)
   return count, words, vocab, sequences, xs, ys
+
+def para_to_seq(paragraphs, sample_size, seq_lenth):
+  sequences = []
+  for paragraph in paragraphs[:sample_size]:
+    seq = ""
+    for sentence in paragraph:
+      seq += sentence
+      if len(seq) >= seq_lenth:
+        sequences.append(seq[:seq_lenth])
+        seq = ""
+  return sequences
 
 def seq_to_int(vocab, sequences):
   xs = []
@@ -137,8 +142,7 @@ class LSTM(nn.Module):
     lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))  # lstm_out shape [input_size, batch_size, hidden_dim]
     # linear to dim-V, then softmax
     y_pred = self.linear(lstm_out.view(len(input), self.batch_size, -1))  # shape [seq_len, batch_size, output_len]
-    # softmax
-    # don't have to, cause CE already have
+    # don't have to softmax, cause CE already have
     # y_pred = nn.functional.softmax(y_pred, dim=2)
     return y_pred
 
@@ -160,20 +164,29 @@ model = LSTM(vocab_size=vocab_size, input_dim=input_dim, hidden_dim=hidden_dim,
 loss_fn = torch.nn.CrossEntropyLoss(reduction='sum')
 learning_rate = 0.01
 # claim globally
-X_train_array = []
-target_array = []
 hist = []
 # preprocess X_train, y_train
-for batch_start in range(0, len(X_int) - batch_size, batch_size):
-  l = batch_start
-  r = batch_start + batch_size
-  X_transpose = np.array(X_int[l:r]).transpose()
-  X_train = torch.from_numpy(X_transpose).type(torch.LongTensor)
-  y_transpose = np.array(y_int[l:r]).transpose()
-  y_train = torch.from_numpy(y_transpose).type(torch.LongTensor)
-  target = y_train.contiguous().view(-1)
-  X_train_array.append(X_train)
-  target_array.append(target)
+def int_to_train_target(X_int, y_int, batch_size):
+  X_train_array = []
+  y_train_array = []
+  target_array = []
+  for batch_start in range(0, len(X_int) - batch_size, batch_size):
+    l = batch_start
+    r = batch_start + batch_size
+    # X
+    X_transpose = np.array(X_int[l:r]).transpose()
+    X_train = torch.from_numpy(X_transpose).type(torch.LongTensor)
+    X_train_array.append(X_train)
+    # y
+    y_transpose = np.array(y_int[l:r]).transpose()
+    y_train = torch.from_numpy(y_transpose).type(torch.LongTensor)
+    y_train_array.append(y_train)
+    # target
+    target = y_train.contiguous().view(-1)
+    target_array.append(target)
+  return X_train_array, y_train_array, target_array
+
+X_train_array, y_train_array, target_array = int_to_train_target(X_int, y_int, batch_size)
 
 def get_var():
   return {'X': X_train_array, 'y': target_array, 'V': vocab, 'seq': sequences, 'm': model, 'w': words, 'h': hist, 'c': word_count}
@@ -191,13 +204,13 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
     # get batch
     global X_train_array
     global target_array
-    batch_num = t % batch_end
+    batch_num = batch_end - t % batch_end - 1  # in reverse order
     X_train = X_train_array[batch_num]
     target = target_array[batch_num]
     # Clear stored gradient
     model.zero_grad()
     # Initialise hidden state
-    model.hidden = model.init_hidden()
+    model.init_hidden()
     # Forward pass
     y_pred = model(X_train)
     # reshape output
@@ -217,6 +230,56 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
     loss.backward()
     # Update parameters
     optimiser.step()
+
+#####################
+# Test
+#####################
+X_test_array = []
+y_test_array = []
+def test():
+  # def para_to_seq(paragraphs, sample_size, seq_len): sequences
+  # def seq_to_int(vocab, sequences): X_int y_int
+  # def int_to_train_target(X_int, y_int, batch_size): X_train_array, y_train_array, target_array
+  global X_test_array
+  global y_test_array
+  if X_test_array == []:
+    sequences = para_to_seq(paragraphs[sample_size:], int(sample_size / 6), seq_len)
+    X_int, y_int = seq_to_int(vocab, sequences)
+    X_test_array, y_test_array, target_array = int_to_train_target(X_int, y_int, batch_size)
+  # loop all batch of test
+  perp = 0
+  for i in range(len(X_test_array)):
+    X_test = X_test_array[i]
+    y_test = y_test_array[i]
+    # forward
+    model.hidden = model.init_hidden()
+    y_pred = model(X_test)
+    y_pred = nn.functional.softmax(y_pred, dim=2)
+    # perplexity
+    perp_one_batch = perplexity(y_pred, y_test)
+    perp += perp_one_batch
+    # print("Batch Num: ", i, "  Perp: ", perp_one_batch)
+  # return avg of batches
+  return perp / len(X_test_array)
+
+def perplexity(output, target):
+  output = output.permute(1, 0, 2)  # [batch_size, seq_len, vocab_size]
+  target = target.permute(1, 0)
+  prod_sum = 0
+  t = 0
+  for y_pred, y in zip(output, target):
+    t += 1
+    prod = np.prod(list(map(
+      lambda x: prob_in_pred(y, x), enumerate(y_pred))))
+    prod_sum += prod ** (1.0 / seq_len)
+    # print("   Num in Batch: ", t, "  Perp: ", prod)
+  return prod_sum / len(output)
+
+def prob_in_pred(y, x):
+  i, vec = x
+  idx = y[i].type(torch.LongTensor)
+  # print("      ", idx, "    ", vec[idx])
+  return 1.0 / vec[idx]
 
 #####################
 # Generate
