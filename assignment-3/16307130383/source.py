@@ -1,5 +1,6 @@
 import json
 import string
+import time
 import random
 import os
 import sys
@@ -150,7 +151,7 @@ class LSTM(nn.Module):
 # Init
 #####################
 seq_len = 48  # 句长
-sample_size = 2048  # 诗个数
+sample_size = 16384  # 诗个数
 word_count, words, vocab, sequences, X_int, y_int = get_vocab_seqs(sample_size, seq_len)
 vocab_size = len(words)
 input_dim = 256  # 输入向量长
@@ -164,7 +165,8 @@ model = LSTM(vocab_size=vocab_size, input_dim=input_dim, hidden_dim=hidden_dim,
 loss_fn = torch.nn.CrossEntropyLoss(reduction='sum')
 learning_rate = 0.01
 # claim globally
-hist = []
+loss_array = []
+perplexity_array = []
 # preprocess X_train, y_train
 def int_to_train_target(X_int, y_int, batch_size):
   X_train_array = []
@@ -189,14 +191,14 @@ def int_to_train_target(X_int, y_int, batch_size):
 X_train_array, y_train_array, target_array = int_to_train_target(X_int, y_int, batch_size)
 
 def get_var():
-  return {'X': X_train_array, 'y': target_array, 'V': vocab, 'seq': sequences, 'm': model, 'w': words, 'h': hist, 'c': word_count}
+  return {'X': X_train_array, 'y': target_array, 'V': vocab, 'seq': sequences, 'm': model, 'w': words, 'h': loss_array, 'c': word_count}
 
 #####################
 # Trainer
 #####################
 def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate=8):
-  global hist
-  hist = np.zeros(num_epochs)
+  global loss_array
+  loss_array = np.zeros(num_epochs)
   # adjust learning rate
   optimiser = torch.optim.Adam(model.parameters(), lr=lr)
   # optimiser = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
@@ -204,7 +206,8 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
     # get batch
     global X_train_array
     global target_array
-    batch_num = batch_end - t % batch_end - 1  # in reverse order
+    # batch_num = batch_end - t % batch_end - 1  # in reverse order
+    batch_num = t % batch_end
     X_train = X_train_array[batch_num]
     target = target_array[batch_num]
     # Clear stored gradient
@@ -217,13 +220,17 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
     output = y_pred.view(-1, vocab_size)
     # computeloss
     loss = loss_fn(output, target)
-    hist[t] = loss.item()
+    loss_array[t] = loss.item()
     # print
     if t % print_rate == 0:
       print("batch num: ", batch_num)
       print("Epoch ", t, "CE: ", loss.item())
       print("sample input: ", translate_int( X_train.numpy().transpose().tolist()[0] ))
       print("sample output: ", translate_vec( y_pred.detach().permute(1, 0, 2).numpy().tolist()[0] ))
+    # record perplexity
+    if batch_num == 0:
+      perplexity_array.append(test().detach().numpy().tolist())
+      save( str(sample_size)+'-'+str( int(t/batch_end) )+'-'+time.strftime("%X", time.localtime())+'.model' )
     # Zero out gradient, else they will accumulate between epochs
     optimiser.zero_grad()
     # backward
@@ -236,29 +243,37 @@ def train(num_epochs, batch_end=len(X_train_array), lr=learning_rate, print_rate
 #####################
 X_test_array = []
 y_test_array = []
+target_test_array = []
 def test():
-  # def para_to_seq(paragraphs, sample_size, seq_len): sequences
-  # def seq_to_int(vocab, sequences): X_int y_int
-  # def int_to_train_target(X_int, y_int, batch_size): X_train_array, y_train_array, target_array
+  perplexity_fn = torch.nn.CrossEntropyLoss(reduction='sum')
+  # get input and target
   global X_test_array
   global y_test_array
+  global target_test_array
   if X_test_array == []:
     sequences = para_to_seq(paragraphs[sample_size:], int(sample_size / 6), seq_len)
     X_int, y_int = seq_to_int(vocab, sequences)
-    X_test_array, y_test_array, target_array = int_to_train_target(X_int, y_int, batch_size)
+    X_test_array, y_test_array, target_test_array = int_to_train_target(X_int, y_int, 1)  # one sentence per batch
   # loop all batch of test
   perp = 0
   for i in range(len(X_test_array)):
     X_test = X_test_array[i]
     y_test = y_test_array[i]
     # forward
+    # y_pred = nn.functional.softmax(output, dim=2)
     model.hidden = model.init_hidden()
-    y_pred = model(X_test)
-    y_pred = nn.functional.softmax(y_pred, dim=2)
+    input = model.embed(X_test)
+    lstm_out, model.hidden = model.lstm(input.view(len(input), 1, -1))
+    output = model.linear(lstm_out.view(len(input), 1, -1))
     # perplexity
-    perp_one_batch = perplexity(y_pred, y_test)
+    # perp_one_batch = perplexity(y_pred, y_test)
+    perp_one_batch = perplexity_fn(output.view(-1, vocab_size), target_test_array[i])
+    # perp_exp = np.exp(perp_one_batch.detach().numpy())
     perp += perp_one_batch
-    # print("Batch Num: ", i, "  Perp: ", perp_one_batch)
+    if i % 256 == 0:
+      print("Batch Num: ", i, "  Perp: ", perp_one_batch)  #
+      print("sample input: ", translate_int( X_test.detach().permute(1, 0).numpy().tolist()[0] ))
+      print("sample output: ", translate_vec( output.detach().permute(1, 0, 2).numpy().tolist()[0] ))
   # return avg of batches
   return perp / len(X_test_array)
 
@@ -266,13 +281,17 @@ def perplexity(output, target):
   output = output.permute(1, 0, 2)  # [batch_size, seq_len, vocab_size]
   target = target.permute(1, 0)
   prod_sum = 0
-  t = 0
+  perps = []
   for y_pred, y in zip(output, target):
-    t += 1
-    prod = np.prod(list(map(
-      lambda x: prob_in_pred(y, x), enumerate(y_pred))))
-    prod_sum += prod ** (1.0 / seq_len)
-    # print("   Num in Batch: ", t, "  Perp: ", prod)
+    # prod = np.prod(list(map(
+    #   lambda x: prob_in_pred(y, x), enumerate(y_pred))))
+    # prod_sum += prod ** (1.0 / seq_len)
+    prod = np.sum(np.log(list(map(
+      lambda x: prob_in_pred(y, x), enumerate(y_pred)))))
+    prod = min(1000.0, prod)
+    prod_sum += prod
+    perps.append(prod)
+  # print("   Perps: ", perps)
   return prod_sum / len(output)
 
 def prob_in_pred(y, x):
@@ -338,7 +357,16 @@ def load(path):
   model.eval()
 
 def draw():
-  X = [i for i in hist if i != 0]
+  print(perplexity_array)
+  # loss
+  plt.subplot(2, 1, 1)
+  X = [i for i in loss_array if i != 0]
+  line_x = np.linspace(0, len(X), len(X))
+  line_y = np.array(X)
+  plt.plot(line_x, line_y)
+  # perplexity
+  plt.subplot(2, 1, 2)
+  X = perplexity_array
   line_x = np.linspace(0, len(X), len(X))
   line_y = np.array(X)
   plt.plot(line_x, line_y)
