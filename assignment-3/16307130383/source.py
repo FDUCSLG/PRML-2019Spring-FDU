@@ -7,6 +7,7 @@ import sys
 sys.path.append('../')
 import torch
 import torch.nn as nn
+from torch.nn import Parameter
 from torch.autograd import Variable
 import numpy as np
 import matplotlib
@@ -116,10 +117,59 @@ def seq_to_int(vocab, sequences):
 #####################
 # LSTM model
 #####################
+class LSTMcell(nn.Module):
+  def __init__(self, input_dim: int, hidden_dim: int):
+    super().__init__()
+    self.input_dim = input_dim
+    self.hidden_dim = hidden_dim
+    # input gate
+    self.W_ii = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_hi = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_i = Parameter(torch.Tensor(hidden_dim))
+    # forget gate
+    self.W_if = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_hf = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_f = Parameter(torch.Tensor(hidden_dim))
+    # c
+    self.W_ig = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_hg = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_g = Parameter(torch.Tensor(hidden_dim))
+    # output gate
+    self.W_io = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_ho = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_o = Parameter(torch.Tensor(hidden_dim))
+
+    self.init_weights()
+
+  def init_weights(self):
+    for p in self.parameters():
+      if p.data.ndimension() >= 2:
+        nn.init.xavier_uniform_(p.data)
+      else:
+        nn.init.zeros_(p.data)
+
+  def forward(self, input, init_states):
+    # [seq_len, batch_size, input_dim]
+    seq_len = len(input)
+    hidden_seq = []
+    h_t, c_t = init_states
+    for t in range(seq_len): # iterate over the time steps
+      x_t = input[t]
+      i_t = torch.sigmoid(x_t @ self.W_ii + h_t @ self.W_hi + self.b_i)
+      f_t = torch.sigmoid(x_t @ self.W_if + h_t @ self.W_hf + self.b_f)
+      g_t = torch.tanh(x_t @ self.W_ig + h_t @ self.W_hg + self.b_g)
+      o_t = torch.sigmoid(x_t @ self.W_io + h_t @ self.W_ho + self.b_o)
+      c_t = f_t * c_t + i_t * g_t
+      h_t = o_t * torch.tanh(c_t)
+      hidden_seq.append(h_t)
+    hidden_seq = torch.cat(hidden_seq).view(seq_len, -1, hidden_dim)
+    return hidden_seq, (h_t, c_t)
+
 class LSTM(nn.Module):
   def __init__(self, vocab_size, input_dim, hidden_dim, batch_size, output_dim=1,
                   num_layers=2):
-    super(LSTM, self).__init__()
+    # super(LSTM, self).__init__()
+    super().__init__()
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
     self.batch_size = batch_size
@@ -127,22 +177,22 @@ class LSTM(nn.Module):
     # Embedding fn
     self.embed = nn.Embedding(vocab_size, self.input_dim)
     # Define the LSTM layer
-    self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
+    # self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
+    self.lstm = LSTMcell(self.input_dim, self.hidden_dim)
     # Define the output layer
     self.linear = nn.Linear(self.hidden_dim, output_dim)
 
-  def init_hidden(self):
-    # return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
-    #         torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
-    return Variable(torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
+  def init_hidden(self, batch_size=32):
+    self.hidden = (torch.zeros(batch_size, self.hidden_dim),
+                  torch.zeros(batch_size, self.hidden_dim))
 
-  def forward(self, input):
+  def forward(self, input, batch_size=32):
     # embed input
     input = self.embed(input)
     # Forward pass
-    lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))  # lstm_out shape [input_size, batch_size, hidden_dim]
+    lstm_out, self.hidden = self.lstm(input.view(len(input), batch_size, -1), self.hidden)  # lstm_out shape [input_size, batch_size, hidden_dim]
     # linear to dim-V, then softmax
-    y_pred = self.linear(lstm_out.view(len(input), self.batch_size, -1))  # shape [seq_len, batch_size, output_len]
+    y_pred = self.linear(lstm_out.view(len(input), batch_size, -1))  # shape [seq_len, batch_size, output_len]
     # don't have to softmax, cause CE already have
     # y_pred = nn.functional.softmax(y_pred, dim=2)
     return y_pred
@@ -260,11 +310,8 @@ def test():
     X_test = X_test_array[i]
     y_test = y_test_array[i]
     # forward
-    # y_pred = nn.functional.softmax(output, dim=2)
-    model.hidden = model.init_hidden()
-    input = model.embed(X_test)
-    lstm_out, model.hidden = model.lstm(input.view(len(input), 1, -1))
-    output = model.linear(lstm_out.view(len(input), 1, -1))
+    model.init_hidden(batch_size=1)
+    output = model(X_test, batch_size=1)
     # perplexity
     # perp_one_batch = perplexity(y_pred, y_test)
     perp_one_batch = perplexity_fn(output.view(-1, vocab_size), target_test_array[i])
@@ -314,14 +361,12 @@ def generate(seed=None, length=48, temperature=0.8, split_len=6):
       start = [[ vocab['OOV'] ]]
   start = torch.LongTensor(start)
   # init hidden
-  model.hidden = model.init_hidden()
+  model.init_hidden(batch_size=1)
   # generate
   seq = ""
   seq += translate_int([ start ])
   for i in range(length):
-    start = model.embed(start)
-    lstm_out, model.hidden = model.lstm(start.view(1, 1, -1))  # seq_len=1, batch_size=1
-    y_pred = model.linear(lstm_out.view(1, 1, -1))
+    y_pred = model(start, batch_size=1)
     # according to temperature softmax
     predict = y_pred.data.view(-1).div(temperature).exp()
     predict = torch.multinomial(predict, 1)[0]
