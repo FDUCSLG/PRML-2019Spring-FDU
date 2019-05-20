@@ -303,7 +303,7 @@ def prob_in_pred(y, x):
 #####################
 # Generate
 #####################
-def generate(seed=None, length=48, temperature=0.8):
+def generate(seed=None, length=48, temperature=0.8, split_len=6):
   # set up first char
   start = [[ random.randint(0, vocab_size-1) ]]
   if not seed is None:
@@ -325,6 +325,11 @@ def generate(seed=None, length=48, temperature=0.8):
     # according to temperature softmax
     predict = y_pred.data.view(-1).div(temperature).exp()
     predict = torch.multinomial(predict, 1)[0]
+    # add split
+    if (i + 2) % (split_len * 2) == 0:
+      predict = torch.LongTensor([[ vocab['。'] ]])
+    elif (i + 2) % split_len == 0:
+      predict = torch.LongTensor([[ vocab['，'] ]])
     # get next
     next_char = translate_int([ predict ])
     seq += next_char
