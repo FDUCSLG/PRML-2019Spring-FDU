@@ -162,7 +162,7 @@ class LSTMcell(nn.Module):
       c_t = f_t * c_t + i_t * g_t
       h_t = o_t * torch.tanh(c_t)
       hidden_seq.append(h_t)
-    hidden_seq = torch.cat(hidden_seq).view(seq_len, -1, hidden_dim)
+    hidden_seq = torch.cat(hidden_seq).view(seq_len, -1, self.hidden_dim)
     return hidden_seq, (h_t, c_t)
 
 class LSTM(nn.Module):
