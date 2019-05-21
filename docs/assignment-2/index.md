@@ -28,7 +28,7 @@ In this part of the assignment, you are required to use logistic regression to d
 
 Text classification is about to classify a given document with its corresponding genre, e.g. sports, news, health etc. To represent the document in a convenient way to be processed by the logistic regression, we could represent the document in a multi-hot style vector.
 
-Firstly you will have to tokenize the document into words (or a list of strings), you should firstly ignore all the characters in `string.punctuation` and then make all `string.whitespace` characters a space , and then split the document by all the spaces to have a list of strings. Then you build a vocabulary on all the words in the training dataset, which simply maps each word in the training dataset to a number. For example, 
+Firstly you will have to tokenize the document into words (or a list of strings), you should firstly ignore all the characters in `string.punctuation` and then make all `string.whitespace` characters a space , and then split the document by all the spaces to have a list of strings.  Subsequently, you should convert all characters into lowercase to facilitate future process. Then you build a vocabulary on all the words in the training dataset, which simply maps each word in the training dataset to a number. For example, 
 
 ```python
 docs_toy = [
@@ -65,6 +65,8 @@ and you use the vocabulary to map the tokenized document to a multi-hot vector!
 ```
 
 as you could verify this is the representation from the above two document.
+
+In practice, the vocabulary dictionary is quite large, which may cause the size of multi-hot vector exceeds the memory limits! To address this problem, you can set a frequency threshold  `min_count` and only consider the words which occur at least `min_count` times in the overall training set. For this problem, `min_count = 10` is suitable.
 
 Once you could represent the document in vectors (and also the category of the document in one-hot representation), then you can use the logistic regression!
 
