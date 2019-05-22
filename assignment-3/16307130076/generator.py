@@ -23,9 +23,9 @@ def generate(model, start_word, idx2word, word2idx, gen_len,T,k):
     net.eval()
     for i in range(1,gen_len):
         outputs=net(input)
-        outputs = F.softmax(outputs/T, dim=1)
+        outputs = F.softmax(outputs / T, dim=1)
         outputs = torch.topk(outputs, dim=1,k=k)[1]
-        output = outputs[-1][random.randint(0,k-1)][-1].item()
+        output = outputs[-1][random.randint(0,k-1)].item()
         if idx2word[output] == '<unk>' or idx2word[output] == '\n':
             break
         else:

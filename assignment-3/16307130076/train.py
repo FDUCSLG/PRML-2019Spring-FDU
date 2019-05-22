@@ -43,20 +43,20 @@ def train():
     use_cuda = torch.cuda.is_available()
     if use_cuda:
         net.cuda()
-    optimizer = Adam(net.parameters(), lr=lr)
-    last_p = last_p_2 = float("inf")
+    optimizer = Adam(net.parameters(recurse=True), lr=lr)
+    last_p = float("inf")
     for epoch in range(max_epoch):
         net.train()
         losses = 0
         for idx, batch_data in enumerate(dataloader):
             t0 = time.time()
+            batch_data = batch_data.transpose(1, 0).contiguous()
             if use_cuda:
                 batch_data =batch_data.cuda()
-            input, target = batch_data[:][:-1], batch_data[:][1:]
-            input = input.permute(1,0)
+            input, target = batch_data[:-1,:], batch_data[1:,:]
             output = net(input)
             optimizer.zero_grad()
-            loss = criterion(output,target)
+            loss = criterion(output,target.view(-1))
             loss.backward()
             optimizer.step()
             losses += loss.item()
@@ -68,27 +68,26 @@ def train():
                    ("Tang", epoch))
         perplexity = eval(net)
         print("perplexity:", perplexity)
-        if perplexity > last_p and last_p > last_p_2:
+        if perplexity > last_p:
             print("early stop")
             break
         else:
-            last_p_2 = last_p
             last_p = perplexity
 
 def eval(net):
     net.eval()
-    criterion = nn.CrossEntropyLoss(reduce=False)
+    criterion = nn.CrossEntropyLoss()
     perplexity = 0
     use_cuda = torch.cuda.is_available()
     with torch.no_grad():
         for idx, data in enumerate(test_dataloader):
+            data = data.transpose(1, 0).contiguous()
             if use_cuda:
                 data = data.cuda()
-            input, target = data[:][:-1], data[:][1:]
-            input = input.permute(1, 0)
+            input, target = data[:-1, :], data[1:, :]
             output = net(input)
-            loss = criterion(output, target)
-            p=torch.mean(torch.exp(loss)).item()
+            loss = criterion(output, target.view(-1))
+            p=torch.exp(loss).item()
             perplexity += p/len(test_dataloader)
             print("testing %d/%d,perplexity:%f" % (idx, len(test_dataloader),p))
     return perplexity

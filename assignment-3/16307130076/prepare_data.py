@@ -19,7 +19,7 @@ def import_data(path):
         content = f.readlines()[1::2]
         for c in content:
             c = re.sub(
-                "[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）《》]+", "", c)  # ！，。？
+                "[\s+\.\!\/_,$%^*(+\"\']+|[+——！？、~@#￥%……&*（）《》]+", "", c)  # ！，。？
             c = c.replace(string.whitespace, '').strip()
             dataset.append(Instance(raw_sentence=c))
     dataset.drop(lambda x: len(list(x['raw_sentence'])) == 0)

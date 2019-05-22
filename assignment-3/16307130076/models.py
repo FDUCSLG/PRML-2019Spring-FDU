@@ -36,7 +36,6 @@ class LSTMCell(nn.Module):
         hidden = torch.mul(self.tanh(cell), o_gate)
         return hidden, cell
 
-
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, cell_size):
         super(LSTM, self).__init__()
@@ -46,7 +45,7 @@ class LSTM(nn.Module):
 
     def forward(self, input, hidden, cell):
         hiddens = None
-        steps = range(0,input.size()[0])
+        steps = range(input.size()[0])
         for i in steps:
             hidden, cell = self.LSTMCell(input[i], hidden, cell)
             hidden_ = hidden.unsqueeze(0)
@@ -71,11 +70,11 @@ class TangPoemGenerator(nn.Module):
         nn.init.uniform_(self.output.weight.data, -stdv, stdv)
 
     def forward(self, x):
+        seq_len, batch_size = x.size()
         emb = self.embeds(x)
         hiddens = self.lstm(emb, torch.zeros((x.size()[1],self.hidden_size)).cuda(
         ), torch.zeros((x.size()[1], self.hidden_size)).cuda())
-        outputs = self.output(hiddens)
-        outputs = outputs.permute(1, 2, 0)
+        outputs = self.output(hiddens.view(seq_len * batch_size, -1))
         return outputs
 
 
