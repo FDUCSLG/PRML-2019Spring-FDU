@@ -7,6 +7,7 @@ from torch.autograd import Variable
 class LSTMCell(nn.Module):
     def __init__(self, input_size, hidden_size, cell_size):
         super(LSTMCell, self).__init__()
+        self.input_size = input_size
         self.hidden_size = hidden_size
         self.cell_size = cell_size
         self.fgate = nn.Linear(input_size + hidden_size, cell_size)
@@ -17,10 +18,9 @@ class LSTMCell(nn.Module):
         self.tanh = nn.Tanh()
 
     def init_weights(self, m):
-        stdv = 1.0 / math.sqrt(self.hidden_size)
+        stdv = 1.0 / math.sqrt(self.input_size)
         if isinstance(m, nn.Linear):
             nn.init.uniform_(m.weight.data, -stdv, stdv)
-            nn.init.uniform_(m.bias.data, -stdv, stdv)
 
     def forward(self, input, hidden, cell):
         combined = torch.cat((input, hidden), 1)
@@ -69,7 +69,6 @@ class TangPoemGenerator(nn.Module):
         stdv = 1.0 / math.sqrt(self.hidden_size)
         nn.init.uniform_(self.embeds.weight.data, -stdv, stdv)
         nn.init.uniform_(self.output.weight.data, -stdv, stdv)
-        nn.init.uniform_(self.output.bias.data, -stdv, stdv)
 
     def forward(self, x):
         emb = self.embeds(x)
