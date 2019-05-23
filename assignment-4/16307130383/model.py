@@ -5,7 +5,7 @@ import numpy as np
 
 class RNNcell(nn.Module):
   def __init__(self, input_dim, hidden_dim):
-    super().__init__()
+    super(RNNcell, self).__init__()
     self.input_dim, self.hidden_dim = input_dim, hidden_dim
     self.W_ih = Parameter(torch.Tensor(input_dim, hidden_dim))
     self.W_hh = Parameter(torch.Tensor(hidden_dim, hidden_dim))
@@ -20,19 +20,67 @@ class RNNcell(nn.Module):
   def forward(self, input, init_state):
     # input: [seq_len, batch_size, hidden_dim]
     seq_len = len(input)
-    hidden_seq = []
+    # hidden_seq = []
     h_t = init_state
     for t in range(seq_len):
       x_t = input[t]
       h_t = torch.tanh(x_t @ self.W_ih + h_t @ self.W_hh + self.bias_hh)
-      hidden_seq.append(h_t)
-    hidden_seq = torch.cat(hidden_seq).view(seq_len, -1, self.hidden_dim)
+      # hidden_seq.append(h_t)
+    # hidden_seq = torch.cat(hidden_seq).view(seq_len, -1, self.hidden_dim)
     # only return the last: [batch_size, hidden_dim]
-    return hidden_seq[-1], h_t
+    return h_t, h_t
+
+class LSTMcell(nn.Module):
+  def __init__(self, input_dim: int, hidden_dim: int):
+    super().__init__()
+    self.input_dim = input_dim
+    self.hidden_dim = hidden_dim
+    # input gate
+    self.W_ii = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_hi = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_i = Parameter(torch.Tensor(hidden_dim))
+    # forget gate
+    self.W_if = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_hf = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_f = Parameter(torch.Tensor(hidden_dim))
+    # c
+    self.W_ig = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_hg = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_g = Parameter(torch.Tensor(hidden_dim))
+    # output gate
+    self.W_io = Parameter(torch.Tensor(input_dim, hidden_dim))
+    self.W_ho = Parameter(torch.Tensor(hidden_dim, hidden_dim))
+    self.b_o = Parameter(torch.Tensor(hidden_dim))
+
+    self.init_weights()
+
+  def init_weights(self):
+    for p in self.parameters():
+      if p.data.ndimension() >= 2:
+        nn.init.xavier_uniform_(p.data)
+      else:
+        nn.init.zeros_(p.data)
+
+  def forward(self, input, init_states):
+    # [seq_len, batch_size, input_dim]
+    seq_len = len(input)
+    # hidden_seq = []
+    h_t, c_t = init_states
+    for t in range(seq_len): # iterate over the time steps
+      x_t = input[t]
+      i_t = torch.sigmoid(x_t @ self.W_ii + h_t @ self.W_hi + self.b_i)
+      f_t = torch.sigmoid(x_t @ self.W_if + h_t @ self.W_hf + self.b_f)
+      g_t = torch.tanh(x_t @ self.W_ig + h_t @ self.W_hg + self.b_g)
+      o_t = torch.sigmoid(x_t @ self.W_io + h_t @ self.W_ho + self.b_o)
+      c_t = f_t * c_t + i_t * g_t
+      h_t = o_t * torch.tanh(c_t)
+      # hidden_seq.append(h_t)
+    # hidden_seq = torch.cat(hidden_seq).view(seq_len, -1, self.hidden_dim)
+    return h_t, (h_t, c_t)
 
 class RNN(nn.Module):
   def __init__(self, vocab_size, input_dim, hidden_dim, output_dim):
-    super().__init__()
+    super(RNN, self).__init__()
     self.vocab_size = vocab_size
     self.input_dim = input_dim
     self.hidden_dim = hidden_dim
@@ -40,10 +88,13 @@ class RNN(nn.Module):
 
     self.embed = nn.Embedding(vocab_size, input_dim)
     self.rnn = RNNcell(input_dim, hidden_dim)
+    # self.lstm = LSTMcell(input_dim, hidden_dim)
     self.linear = nn.Linear(hidden_dim, output_dim)
 
   def init_hidden(self, batch_size=32):
     self.hidden = torch.zeros(batch_size, self.hidden_dim)
+    # self.hidden = (torch.zeros(batch_size, self.hidden_dim),
+                  # torch.zeros(batch_size, self.hidden_dim))
 
   def forward(self, word_seq):
     # init
@@ -52,6 +103,7 @@ class RNN(nn.Module):
     word_seq = self.embed(word_seq).permute(1, 0, 2)
     # forward
     rnn_out, self.hidden = self.rnn(word_seq, self.hidden)
+    # rnn_out, self.hidden = self.lstm(word_seq, self.hidden)
     y_pred = self.linear(rnn_out)
     # output: [batch_size, output_dim]
     return { 'output': y_pred, 'pred': nn.functional.softmax(y_pred, dim=1), 'hidden': self.hidden }
@@ -60,7 +112,7 @@ class RNN(nn.Module):
 class CNN(nn.Module):
   def __init__(self, vocab_size, input_dim, output_dim, in_channels, out_channels,
                 kernel_sizes, keep_probab, embedding_weights=None):
-    super().__init__()
+    super(CNN, self).__init__()
     self.vocab_size = vocab_size
     self.input_dim = input_dim
     self.output_dim = output_dim

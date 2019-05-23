@@ -1,3 +1,4 @@
+import copy
 from model import RNN, CNN
 from preprocess import build_dataset
 from fastNLP import Trainer
@@ -19,10 +20,11 @@ import torch
 #               'talk.politics.guns',
 #               'talk.politics.mideast',
 #               'talk.religion.misc']
-categories = ['comp.os.ms-windows.misc', 'rec.motorcycles', 'sci.space', 'talk.politics.misc', ]      
-vocab, train_set, test_set = build_dataset(train_size=2000, test_rate=0.1, categories=categories)
+categories = ['comp.os.ms-windows.misc', 'rec.motorcycles', 'sci.space', 'sci.crypt', 'sci.electronics', 
+              'soc.religion.christian', 'talk.politics.guns', 'talk.politics.mideast',]
+vocab, train_set, test_set = build_dataset(train_size=4000, test_rate=0.1, categories=categories)
 vocab_size = len(vocab)
-input_dim = 256
+input_dim = 512
 hidden_dim = 256
 output_dim = len(categories)
 in_channels = 1
@@ -32,18 +34,24 @@ keep_proba = 0.5
 print('vocab size: ', vocab_size, '  output_dim: ', output_dim)
 print('train size: ', len(train_set), '  test size: ', len(test_set))
 
-# model = RNN(vocab_size, input_dim, hidden_dim, output_dim)
-model = CNN(vocab_size, input_dim, output_dim, in_channels, out_channels, kernel_sizes, keep_proba)
+model = RNN(vocab_size, input_dim, hidden_dim, output_dim)
+# model = CNN(vocab_size, input_dim, output_dim, in_channels, out_channels, kernel_sizes, keep_proba)
 
 def train(epochs=10, lr=0.001):
-  trainer = Trainer(model=model, train_data=test_set, dev_data=test_set,
-                    loss=CrossEntropyLoss(pred='output', target='target'),
-                    metrics=AccuracyMetric(pred='pred', target='target'),
-                    optimizer=Adam(lr=lr),
-                    save_path='../model',
-                    batch_size=1,
-                    n_epochs=epochs)
-  trainer.train()
+  global model
+  for i in range(epochs):
+    print('----------------- ', str(i+1), ' ------------------')
+    trainer = Trainer(model=model, train_data=train_set, dev_data=test_set,
+                      loss=CrossEntropyLoss(pred='output', target='target'),
+                      metrics=AccuracyMetric(pred='pred', target='target'),
+                      optimizer=Adam(lr=lr),
+                      save_path=None,
+                      batch_size=1,
+                      n_epochs=1)
+    trainer.train()
+    model.load_state_dict( copy.deepcopy(trainer.model.state_dict()) )
+    # save('../model/cnn-' + str(kernel_sizes) + '-' + str(keep_proba) + '-' + str(i+1))
+    save('../model/rnn-' + str(input_dim) + '-' + str(hidden_dim) + '-' + str(i+1))
 
 def get_model():
   return model
