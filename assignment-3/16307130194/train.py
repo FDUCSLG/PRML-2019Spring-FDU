@@ -1,5 +1,6 @@
 from fastNLP import DataSet
 from fastNLP import Trainer
+from fastNLP.core.optimizer import Adam
 
 from dataset import get_dataset
 from config import Config
@@ -10,13 +11,22 @@ from utils import Perplexity
 def train():
     config = Config()
 
-    train_data, dev_data, vocabulary = get_dataset(config.data_path, dataset=config.dataset)
+    train_data, dev_data, vocabulary = get_dataset(config.data_path)
+    print('Train data size:', len(train_data))
+    print('Dev data size:', len(dev_data))
+    print('Vocab size:', len(vocabulary))
+
     poetry_model = PoetryModel(vocabulary_size=len(vocabulary), embedding_size=config.embedding_size,
                                hidden_size=config.hidden_size)
     perplexity = Perplexity()
+    if config.optimizer == 'adam':
+        optimizer = Adam(lr=config.lr , weight_decay=config.weight_decay)
 
-    trainer = Trainer(train_data=train_data, model=poetry_model, metrics=perplexity,
-                      n_epochs=config.epoch, batch_size=config.batch_size)
+    trainer = Trainer(train_data=train_data, model=poetry_model, loss=None,
+                      metrics=perplexity, n_epochs=config.epoch, batch_size=config.batch_size,
+                      print_every=config.print_every, validate_every=config.validate_every,
+                      dev_data=dev_data, save_path=config.save_path, 
+                      optimizer=optimizer, check_code_level=)
 
 
 def main(**kwargs):

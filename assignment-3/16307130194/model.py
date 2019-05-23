@@ -12,19 +12,19 @@ class PoetryModel(nn.Module):
         self.linear = nn.Linear(self.hidden_size, vocabulary_size)
 
     def forward(self, input, hidden_state=None):
-        sentence_length, batch_size = input.size()
+        sequence_length, batch_size = input.size()
         if hidden_state is None:
             h = input.data.new(2, batch_size, self.hidden_size).fill_(0).float()
             c = input.data.new(2, batch_size, self.hidden_size).fill_(0).float()
         else:
             h, c = hidden_state
-        # size: [setence_length, batch_size, embedding_size]
+        # size: [sequence_length, batch_size, embedding_size]
         embeddings = self.embeddings(input)
-        # output size: (seq_len,batch_size,hidden_dim)
+        # output size: [sequence_length, batch_size, hidden_size]
         output, hidden = self.lstm(embeddings, (h, c))
 
-        # size: [setence_length * batch_size, vocabulary_size]
-        output = self.linear(output.view(sentence_length * batch_size, -1))
+        # size: [sequence_length * batch_size, vocabulary_size]
+        output = self.linear(output.view(sequence_length * batch_size, -1))
         return output, hidden
 
 

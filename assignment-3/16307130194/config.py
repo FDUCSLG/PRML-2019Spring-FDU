@@ -1,17 +1,21 @@
 
 class Config(object):
-    dataset = 'large'
-    # dataset = 'small'
+    data_path = './tangshi.txt'
+    save_path = './'
 
-    epoch = 50
     embedding_size = 128
     hidden_size = 512
 
-    def __init__(self):
-        if self.dataset == 'small':
-            self.data_path = '../handout/tangshi.txt'
-        else:
-            self.data_path = 'tang.npz'
+    epoch = 75
+    batch_size = 128
+    print_every = 500
+    validate_every = 1000
+
+    optimizer = 'adam'
+    lr = 0.01
+    weight_decay = 0
+
+    sequence_length = 128
 
     # output_dir = './'
     # do_train = True

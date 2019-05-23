@@ -4,25 +4,20 @@ from fastNLP import Vocabulary
 import numpy as np
 
 
-def get_dataset(data_path, dataset='large'):
-    poetry = []
-    if dataset == 'small':
-        with open(data_path, 'r', encoding='utf-8') as f:
-            poem = ''
-            for line in f:
-                if len(line) <= 1:
-                    ins = Instance(text=poem)
-                    poetry.append(ins)
-                    poem = ''
-                else:
-                    poem += line.strip('\n')
-    else:
-        data = np.load(data_path)
-        data, ix2word = data['data'], data['ix2word'].item()
-        for d in data
-        poetry = data['data']
+def get_dataset(data_path):
+    print('Getting dataset...')
 
-    print(poetry[0])
+    poetry = []
+    with open(data_path, 'r', encoding='utf-8') as f:
+        poem = ''
+        for line in f:
+            if len(line) <= 1:
+                ins = Instance(text=poem)
+                poetry.append(ins)
+                poem = ''
+            else:
+                poem += line.strip('\n')
+    # print(poetry[0])
 
     data = DataSet(data=poetry)
     data.apply(lambda x: len(x['text']), new_field_name='length')
