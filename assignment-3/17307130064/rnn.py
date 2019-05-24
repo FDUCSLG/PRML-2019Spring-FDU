@@ -180,6 +180,7 @@ class LSTM(RNNBase):
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 
 class RNN(nn.Module):
@@ -191,6 +192,7 @@ class RNN(nn.Module):
         self.linear = nn.Linear(self.hidden_dim, word_list_size)
         self.softmax = nn.LogSoftmax()
 
+
     def forward(self, input, hidden):
         input_size = input.size()[0]
         embeds = self.embeddings(input).view((input_size, 1, -1))
@@ -200,4 +202,4 @@ class RNN(nn.Module):
         return output, hidden
 
     def init_hidden(self, length=1):
-        return (torch.zeros(length, 1, self.hidden_dim), torch.zeros(length, 1, self.hidden_dim))
+        return (Variable(torch.zeros(length, 1, self.hidden_dim).cuda()), Variable(torch.zeros(length, 1, self.hidden_dim)).cuda())
