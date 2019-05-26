@@ -92,7 +92,7 @@ def get_data():
 				if (len(tmp) >= 48):
 					data.append(tmp)
 					tmp = ""
-				if (len(data) >= 700):
+				if (len(data) >= 4000):
 					break
 				s = ""
 			else:
@@ -226,7 +226,7 @@ def train():
 	except Exception:
 		pass
 
-	#print('cnt=',cnt)
+	print('cnt=',cnt)
 	try:
 		epoch = 0
 		while True:
@@ -292,10 +292,11 @@ def draw():
 	SGD_m_loss = dt3['loss']
 	SGD_m_per = dt3['loss']
 	max_len = max(len(Adam_loss),len(SGD_m_loss),len(SGD_loss))
-	time = np.arange(len(Adam_loss))
+	time = np.arange(max_len)
 	x = max_len - len(Adam_loss)
 	for i in range(x):
 		Adam_loss.append(None)
+
 	x = max_len - len(SGD_m_loss)
 	for i in range(x):
 		SGD_m_loss.append(None)
@@ -305,7 +306,7 @@ def draw():
 	plt.plot(time, Adam_loss)
 	plt.plot(time, SGD_m_loss)
 	plt.plot(time, SGD_loss)
-	plt.legend(["Adam loss", "SGD with momentun loss","SGD loss"])
+	plt.legend(["Adam loss", "SGD with momentum loss","SGD loss"])
 	plt.show()
 
 if __name__ == "__main__":
