@@ -146,7 +146,7 @@ class RNN_model(nn.Module):
         return predict
 
 
-# 与torch.nn的LSTM作对比
+# 与torch.nn的LSTM作对比，仅用于测试任务可行性
 class RNN_torch_lstm(nn.Module):
     def __init__(self, vocab_len, embedding_size, lstm_hidden_size):
         super(RNN_torch_lstm,self).__init__()
