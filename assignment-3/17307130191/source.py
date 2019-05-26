@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 sys.path.append("../")
 
 class Config(object):
-    max_epoch = 30
-    batch_size = 1
+    max_epoch = 15
+    batch_size = 16
     embedding_dim = 64 
     hidden_dim = 64    
     save_every = 4
@@ -24,6 +24,8 @@ def preprocess(frac, conf):
         num = 0
         for line in all:
             poem = line['paragraphs']
+            if num >= 1000:
+                break
             if len(poem) == 2:
                 num += 1
                 raw_poems.append(poem)
@@ -99,7 +101,7 @@ class Poemmodel(nn.Module):
 
         embeds = self.embedding(input).t() # [300 * 1900] * [1900, n]
         (h_t_1, c_t_1) = hidden # 300 * n
-
+        # print(h_t_1, input)
         # print("embeds:", len(embeds), len(embeds[0]))
         z = torch.cat((h_t_1, embeds), 0)
         i_t = torch.sigmoid(self.Wi.mm(z) + self.bi)
@@ -114,68 +116,70 @@ class Poemmodel(nn.Module):
 def train():
     conf = Config()
     train_data, dev_data, word2id, wordindex = preprocess(0.2, conf)
-    model = Poemmodel(conf, word2id)
-    optimizer = torch.optim.RMSprop(model.parameters())
+    # model = Poemmodel(conf, word2id)
+    # optimizer = torch.optim.RMSprop(model.parameters())
     len_train_data = len(train_data)
 
-    # net_SGD = Poemmodel(conf, word2id)
-    # net_Momentum = Poemmodel(conf, word2id)
-    # net_RMSprop = Poemmodel(conf, word2id)
-    # net_Adam = Poemmodel(conf, word2id)
-    # nets = [net_SGD, net_Momentum, net_RMSprop, net_Adam]
+    net_SGD = Poemmodel(conf, word2id)
+    net_Momentum = Poemmodel(conf, word2id)
+    net_RMSprop = Poemmodel(conf, word2id)
+    net_Adam = Poemmodel(conf, word2id)
+    nets = [net_SGD, net_Momentum, net_RMSprop, net_Adam]
 
-    # opt_SGD = torch.optim.SGD(net_SGD.parameters(), lr=0.01)
-    # opt_Momentum = torch.optim.SGD(net_Momentum.parameters(), lr=0.01, momentum=0.9)
-    # opt_RMSprop = torch.optim.RMSprop(net_RMSprop.parameters())
-    # opt_Adam = torch.optim.Adam(net_Adam.parameters())
-    # optimizers = [opt_SGD, opt_Momentum, opt_RMSprop, opt_Adam]
-    # losses = [[],[],[],[]]
+    opt_SGD = torch.optim.SGD(net_SGD.parameters(), lr=0.01)
+    opt_Momentum = torch.optim.SGD(net_Momentum.parameters(), lr=0.01, momentum=0.9)
+    opt_RMSprop = torch.optim.RMSprop(net_RMSprop.parameters())
+    opt_Adam = torch.optim.Adam(net_Adam.parameters())
+    optimizers = [opt_SGD, opt_Momentum, opt_RMSprop, opt_Adam]
+    losses = [[],[],[],[]]
     criterion = nn.CrossEntropyLoss()
     # model.load_state_dict(torch.load('model.path'))
-    Loss = []
-    for i in range(conf.max_epoch):
-        loss1 = torch.tensor(0.)
-        for poems in train_data:
-            loss3 = torch.tensor(0.)
-            optimizer.zero_grad()
-            lenth = len(poems[0])
-            for j in range(conf.batch_size):#TODO
-                h = torch.zeros(model.output_dim, lenth - 1)
-                c = torch.zeros(model.output_dim, lenth - 1) # 64 * n
-                input = torch.LongTensor([poems[j][0]])
-                for k in range(1, lenth - 1):
-                    input = torch.cat((input, torch.LongTensor([poems[j][k]])), 0)
-                output, h, c = model(input, (h, c))
-                tar = torch.LongTensor([poems[j][1]])
-                for k in range(1, lenth - 1):
-                    tar = torch.cat((tar, torch.LongTensor([poems[j][k + 1]])), 0)
-                loss3 += criterion(output.t(), tar)
-                # print(input, tar)
-            loss3.backward()
-            optimizer.step()
-            loss1 += loss3 / (lenth - 1)
-        loss2 = loss1 / (conf.batch_size * len(train_data))
-        Loss.append(loss2)
-        print("epoch loss:", loss2)
-        if i % conf.save_every == 0 and i != 0:
-            torch.save(model.state_dict(), 'model_epoch_%s.path'%(i))
-    perplexity(model, dev_data)
-    # labels = ['SGD', 'Momentum', 'RMSprop', 'Adam']
-    # for i, l_his in enumerate(losses):
-    #     plt.plot(l_his, label=labels[i])
-    # plt.legend(loc='best')
+    # Loss = []
+    for net, opt, loss in zip(nets, optimizers, losses):
+        for i in range(conf.max_epoch):
+            loss1 = torch.tensor(0.)
+            for poems in train_data:
+                loss3 = torch.tensor(0.)
+                opt.zero_grad()
+                lenth = len(poems[0])
+                h = torch.zeros(net.output_dim, conf.batch_size) #64 * batch
+                c = torch.zeros(net.output_dim, conf.batch_size) # 64 * n
+                for k in range(0, lenth - 1):
+                    input = torch.LongTensor([poems[0][k]])
+                    for j in range(1, conf.batch_size):#TODO
+                        input = torch.cat((input, torch.LongTensor([poems[j][k]])), 0)
+                    output, h, c = net(input, (h, c))
+                    tar = torch.LongTensor([poems[0][k + 1]])
+                    for j in range(1, conf.batch_size):
+                        tar = torch.cat((tar, torch.LongTensor([poems[j][k + 1]])), 0)
+                    loss3 += criterion(output.t(), tar)
+                    # print(input, tar)
+                loss3.backward()
+                opt.step()
+                loss1 += loss3 / (lenth - 1)
+            loss2 = loss1 / len(train_data)
+            # Loss.append(loss2)
+            loss.append(loss2)
+            print("epoch loss:", loss2)
+        #if i % conf.save_every == 0 and i != 0:
+        #    torch.save(model.state_dict(), 'model_epoch_%s.path'%(i))
+        #perplexity(model, dev_data)
+    labels = ['SGD', 'Momentum', 'RMSprop', 'Adam']
+    for i, l_his in enumerate(losses):
+        plt.plot(l_his, label=labels[i])
+    plt.legend(loc='best')
     plt.xlabel("Epoch No.")
     plt.ylabel("Loss function on training set")
-    plt.plot(np.linspace(0, len(Loss), len(Loss)), Loss)
+    # plt.plot(np.linspace(0, len(Loss), len(Loss)), Loss)
     plt.show()
-    generate(wordindex("日"), model, wordindex)
+    # generate(wordindex("日"), model, wordindex)
     # generate(wordindex("红"), model, wordindex)
-    generate(wordindex("山"), model, wordindex)
-    generate(wordindex("夜"), model, wordindex)
-    generate(wordindex("湖"), model, wordindex)
-    generate(wordindex("海"), model, wordindex)
-    generate(wordindex("月"), model, wordindex)
-    generate(wordindex("红"), model, wordindex)
+    # generate(wordindex("山"), model, wordindex)
+    # generate(wordindex("夜"), model, wordindex)
+    # generate(wordindex("湖"), model, wordindex)
+    # generate(wordindex("海"), model, wordindex)
+    # generate(wordindex("月"), model, wordindex)
+    # generate(wordindex("红"), model, wordindex)
 
 def generate(prefix, model, wordindex):
     next = prefix
