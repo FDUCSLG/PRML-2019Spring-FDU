@@ -101,6 +101,6 @@ def gen(**kwargs) :
             conf.start_words = conf.start_words.encode('ascii','surrogateescape').decode('utf8')
             conf.prefix_words = conf.prefix_words.encode('ascii','surrogateescape').decode('utf8') if conf.prefix_words else None
         start_words = start_words.replace(',',u'，').replace('.',u'。').replace('?',u'？')
-        gen_poetry = gen_acrostic if conf.gen_type=='acrostic' else generate_poet
+        gen_poetry = gen_acrostic if conf.gen_type=='acrostic' else generate
         result = gen_poetry(model,start_words,pdata.vocab,conf)
         print(''.join(result))

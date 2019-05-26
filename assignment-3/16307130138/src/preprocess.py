@@ -1,7 +1,6 @@
 import sys
 from sys import argv
 import os
-import re
 import numpy
 import string
 import torch
@@ -50,7 +49,6 @@ def get_all_tang(data_path=None):
                 for lidx,line in enumerate(fin):
                     line = line.strip()
                     if(line != "" and len(line)>1):
-                        line = re.sub(u"\\（.*?）|\\{.*?}|\\【.*?】|[.*?]","",line)
                         instance = Instance(raw_sentence=line)
                         data_set.append(instance)
         else:
@@ -92,7 +90,6 @@ class PoemData(object):
         return words
 
     def read_data(self,conf):
-        print(conf.data_path)
         if conf.all_tang:
             self.data_set = get_all_tang(conf.data_path)
         else: 
@@ -115,9 +112,11 @@ class PoemData(object):
         
         self.test_data.apply(lambda x : [self.vocab.to_index(word) for word in x['words']],new_field_name='words')
         self.test_data.apply(self.pad_seq,new_field_name='pad_words')
+
+        print(self.test_data[0])
     
-    def get_data_list(self,conf):
-        self.read_data(conf)
+    def get_data(self,conf):
+        self.get_data(conf)
         self.get_vocab()
         return self.train_data['pad_words'], self.test_data['pad_words']
 

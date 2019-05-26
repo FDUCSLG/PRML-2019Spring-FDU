@@ -6,7 +6,7 @@ import math
 sys.path.append('../')
 
 import torch.nn as nn
-from torch.optim import Adam
+from torch.optim import Adam,SGD,Adadelta,Adagrad
 import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
@@ -50,7 +50,7 @@ def parse_args():
                         help='specify gpu device')
 
     train_settings = parser.add_argument_group('train settings')
-    train_settings.add_argument('--optim', default='adam',
+    train_settings.add_argument('--optim', default='Adam',
                                 help='optimizer type')
     train_settings.add_argument('--learning_rate', type=float, default=0.001,
                                 help='learning rate')
@@ -104,14 +104,26 @@ def train(conf,args=None):
 
     dataloader = DataLoader(train_data, batch_size=conf.batch_size,shuffle=True,num_workers=conf.num_workers)
     devloader = DataLoader(dev_data,batch_size=conf.batch_size,shuffle=False,num_workers=conf.num_workers)
-    
-    optimizer = Adam(model.parameters(),lr = conf.learning_rate)
+    if args.optim=="Adadelta":
+        optimizer = Adadelta(model.parameters(),lr=conf.learning_rate)
+        print("adadelta")
+    elif args.optim == "SGD":
+        optimizer = SGD(model.parameters(),lr = conf.learning_rate,momentum=0.8,nesterov=True)
+        print("SGD")
+    elif args.optim == "Adagrad":
+        optimizer = Adagrad(model.parameters())
+        print("Adagrad")
+    else:
+        optimizer = Adam(model.parameters(),lr = conf.learning_rate)
+        print("default: Adam")
+
     criterion = nn.CrossEntropyLoss()
     loss_meter = meter.AverageValueMeter()
 
 
     if conf.load_best_model:
-        model.load_state_dict(torch.load(conf.beat_model_path))
+        model.load_state_dict(torch.load(conf.best_model_path))
+        print("loading_best_model from {0}".format(conf.best_model_path))
     if conf.use_gpu:
         model.cuda()
         criterion.cuda()
@@ -125,6 +137,7 @@ def train(conf,args=None):
         for i,data in enumerate(dataloader):
             data = data.long().transpose(1,0).contiguous()
             if conf.use_gpu:
+                #print("Cuda")
                 data = data.cuda()
             input,target = data[:-1,:],data[1:,:]
             optimizer.zero_grad()
@@ -162,7 +175,7 @@ def train(conf,args=None):
         if ppl<bestppl:
             bestppl = ppl
             early_stop_controller = 0
-            torch.save(model.state_dict(),"{0}_{1}".format(conf.best_model_path,"best_model"))
+            torch.save(model.state_dict(),"{0}".format(conf.best_model_path))
         else:
             early_stop_controller += 1
         if early_stop_controller>10:
@@ -245,7 +258,7 @@ def train_torch_lstm(conf,args=None):
         if ppl<bestppl:
             bestppl = ppl
             early_stop_controller = 0
-            torch.save(model.state_dict(),"{0}".format(conf.best_model_path))
+            torch.save(model.state_dict(),"{0}_{1}".format(conf.best_model_path,"best_model"))
         else:
             early_stop_controller += 1
         if early_stop_controller>conf.patience:
@@ -295,13 +308,12 @@ def generate(conf,args):
     pass
 
 def contrain(conf,args):
-
     pass
 
 def run():
     conf = Config()
     args = parse_args()
-    args.train = True
+    #args.train = True
 
     if args.prepare:
         prepare(conf,args)
