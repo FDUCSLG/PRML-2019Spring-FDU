@@ -24,8 +24,8 @@ categories = ['comp.os.ms-windows.misc', 'rec.motorcycles', 'sci.space', 'sci.cr
               'soc.religion.christian', 'talk.politics.guns', 'talk.politics.mideast',]
 vocab, train_set, test_set = build_dataset(train_size=4000, test_rate=0.1, categories=categories)
 vocab_size = len(vocab)
-input_dim = 512
-hidden_dim = 256
+input_dim = 256
+hidden_dim = 128
 output_dim = len(categories)
 in_channels = 1
 out_channels = 256
@@ -51,7 +51,7 @@ def train(epochs=10, lr=0.001):
     trainer.train()
     model.load_state_dict( copy.deepcopy(trainer.model.state_dict()) )
     # save('../model/cnn-' + str(kernel_sizes) + '-' + str(keep_proba) + '-' + str(i+1))
-    save('../model/rnn-' + str(input_dim) + '-' + str(hidden_dim) + '-' + str(i+1))
+    save('../model/lstm-' + str(input_dim) + '-' + str(hidden_dim) + '-' + str(i+1))
 
 def get_model():
   return model
