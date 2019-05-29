@@ -78,7 +78,7 @@ def run_cnn():
     #train_dataset[0],test_dataset[0]
 
     from fastNLP.models import CNNText
-    embed_dim=50
+    embed_dim=2048 #50
     model = CNNText((len(vocab),embed_dim), num_classes=4, padding=2, dropout=0.1)
     model
 
@@ -150,13 +150,17 @@ def run_rnn():
     train_dataset.apply(lambda x: int(x['label']), new_field_name='target', is_target=True)
     test_dataset.apply(lambda x: int(x['label']), new_field_name='target', is_target=True)
 
-    model = Rnn(len(vocab), 128, 128, 2, 4)  # 图片大小是28x28
+    embed_dim=1024
+    hidden_dim=128
+    layer=4
+
+    model = Rnn(len(vocab), embed_dim, hidden_dim, layer,4 ) 
     use_gpu = torch.cuda.is_available()  # 判断是否有GPU加速
     if use_gpu:
         model = model.cuda()
 
     trainer = Trainer(model=model, train_data=train_dataset, dev_data=test_dataset,
-                  loss=CrossEntropyLoss(), metrics=AccuracyMetric())
+                  loss=CrossEntropyLoss(), n_epochs=100, metrics=AccuracyMetric())
     trainer.train()
 
 
