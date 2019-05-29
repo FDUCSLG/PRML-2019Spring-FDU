@@ -25,7 +25,7 @@ C_t & = \mathbf{f}_t * C_{t-1} + \mathbf{i}_t * \bar{C}_t \\
 \mathbf{h}_t &= \mathbf{o}_t * tanh(C_t) \\
 \end{align}
 $$
-where $\cdot$ stands for matrix multiplication, $*$ for dot production and $[\cdot, \cdot]$ for vector concatenation. Note $W_{*}$ and $b_{*}$ are parameters of the LSTM that is the same throughout all steps.
+where $\cdot$ stands for matrix multiplication, $*$ for element-wise production and $[\cdot, \cdot]$ for vector concatenation. Note $W_{*}$ and $b_{*}$ are parameters of the LSTM that is the same throughout all steps.
 
 Also note that here the input is a vector while in your implementation, please use batched input as matrix multiplication on matrix is the same as multiplying vectors concatenated horizontally.
 
@@ -34,7 +34,7 @@ For language modeling, we use LSTM to predict the next word or character at each
 
 Requirements
 
-1. Differentiate one step of LSTM with respect to $\mathbf{h}_t$ for $\mathbf{f}_t, \mathbf{i}_t, \mathbf{i}_t, \bar{C}_t, C_t, C_{t-1},\mathbf{o}_t, \mathbf{h}_{t-1}, \mathbf{x}_t$. i.e. $\frac{\partial \mathbf{h}_t}{\partial \mathbf{f}_t}$, include your formalization and derivation in your report. 10%
+1. Differentiate one step of LSTM with respect to $\mathbf{h}_t$ for $\mathbf{f}_t, \mathbf{i}_t, \bar{C}_t, C_t, C_{t-1},\mathbf{o}_t, \mathbf{h}_{t-1}, \mathbf{x}_t, W_f, W_i, W_C, W_o, b_f, b_i, b_C, b_o $. i.e. $\frac{\partial \mathbf{h}_t}{\partial \mathbf{f}_t}$, include your formalization and derivation in your report. 10%
 
 2. Describe how can you differentiate through time for the training of an LSTM language model for sentence $s_1,s_2,\cdots, s_n$. 10%
 
@@ -65,7 +65,7 @@ The perplexity should be evaluated on the whole development dataset, which is to
 
 To generate a Tang poem once you got the model trained, you could first sample a word to start and then use it as input to the LSTM, and them sample from the output of the LSTM and in turn send the generated word into the LSTM to have the next word generated. To allow more variation, sometimes people use a **temperature term $\tau$** in the sofmax to control the diversity of generation, for example use $\tau=0.6$ to make it more variant than $\tau=1$.
 
-Above all, you might find [this artical](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) great to help understand the task, where the author implemented a vanilla RNN language model to generate not only poems, but also linux kernel code. 
+Above all, you might find [this article](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) great to help understand the task, where the author implemented a vanilla RNN language model to generate not only poems, but also linux kernel code. 
 
 
 
@@ -82,9 +82,9 @@ Clarification
 2. Please do get your self familiar with PyTorch and FastNLP because in the subsequent assignment and the final project, you must use them to finish the task.
 3. In the bonus, you only have to show case that your numpy LSTM is workable (for example by showing that its gradient matches the gradient from PyTorch version or it could overfit the training dataset), and you don't have to stick to use it for other tasks.
 
-[^Hochreiter & Schmidhuber (1997)]:http://www.bioinf.jku.at/publications/older/2604.pdf
+[^Hochreiter & Schmidhuber (1997)]: http://www.bioinf.jku.at/publications/older/2604.pdf
 [^2]: Qian, N. (1999). On the momentum term in gradient descent learning algorithms. Neural Networks : The Official Journal of the International Neural Network Society, 12(1), 145–151. <http://doi.org/10.1016/S0893-6080(98)00116-6>
 [^3]: Nesterov, Y. (1983). A method for unconstrained convex minimization problem with the rate of convergence o(1/k2). Doklady ANSSSR (translated as Soviet.Math.Docl.), vol. 269, pp. 543– 547.
 [^4]: Duchi, J., Hazan, E., & Singer, Y. (2011). Adaptive Subgradient Methods for Online Learning and Stochastic Optimization. Journal of Machine Learning Research, 12, 2121–2159. Retrieved from <http://jmlr.org/papers/v12/duchi11a.html>
 [^5]: Zeiler, M. D. (2012). ADADELTA: An Adaptive Learning Rate Method. Retrieved from <http://arxiv.org/abs/1212.5701>
-[^6]:Kingma, D. P., & Ba, J. L. (2015). Adam: a Method for Stochastic Optimization. International Conference on Learning Representations, 1–13.
+[^6]: Kingma, D. P., & Ba, J. L. (2015). Adam: a Method for Stochastic Optimization. International Conference on Learning Representations, 1–13.
