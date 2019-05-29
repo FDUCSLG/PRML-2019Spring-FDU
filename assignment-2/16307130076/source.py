@@ -53,7 +53,6 @@ def perceptron(dataset, n, it):
             print("acc:", dataset.acc(pred_y),", steps:",lr)
             break
 
-
 def convert_data(train_data, test_data, min_count):
     cnt = Counter()
     processed_train_data = []
