@@ -8,7 +8,7 @@ from fastNLP import AccuracyMetric
 
 vocab, train_data, dev_data, test_data = create_dataset()
 
-model = lstm(vocab_size=len(vocab), embedding_length=50, hidden_size=32, output_size=5)
+model = lstm(vocab_size=len(vocab), embedding_length=200, hidden_size=128, output_size=20)
 model.cuda()
 
 loss = CrossEntropyLoss(pred='pred', target='target')

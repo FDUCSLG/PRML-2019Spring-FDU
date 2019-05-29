@@ -14,13 +14,13 @@ class cnn(nn.Module):
         self.fc = nn.Linear(sum(kernel_nums), num_classes)
 
     def forward(self, words, seq_len=None):
-        x = self.embed(words)
+        x = self.embed(words.cuda())
         x = self.conv_pool(x)
         x = self.dropout(x)
         x = self.fc(x)
         return {'pred' : x}
 
     def predict(self, words, seq_len=None):
-        output = self(words, seq_len)
+        output = self(words.cuda(), seq_len)
         _, predict = output['pred'].max(dim=1)
         return {'pred' : predict}

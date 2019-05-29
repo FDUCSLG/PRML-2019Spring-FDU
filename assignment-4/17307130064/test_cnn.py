@@ -7,9 +7,9 @@ from fastNLP import Tester
 
 vocab, train_data, dev_data, test_data = create_dataset()
 
-model = torch.load('./best_cnn_accuracy_2019-05-28-22-30-20')
+model = torch.load('./best_cnn_accuracy_2019-05-29-00-24-30')
 
 metrics = AccuracyMetric(pred='pred', target='target')
 
-tester = Tester(data=test_data, model=model, metrics=metrics)
+tester = Tester(data=test_data, model=model, metrics=metrics, device=0)
 tester.test()
