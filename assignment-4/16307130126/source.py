@@ -187,7 +187,7 @@ if __name__ == "__main__":
 		model = model.cuda()
 
 	trainer = Trainer(model=model, train_data=traindata, dev_data=dev_data, loss=CrossEntropyLoss(),
-	                  metrics=AccuracyMetric(), save_path="model", batch_size=32, n_epochs=20, device='cuda')
+	                  metrics=AccuracyMetric(), save_path="model", batch_size=10, n_epochs=20, device='cuda',callbacks=[EarlyStopCallback(10)])
 	trainer.train()
 
 	print('test...')
