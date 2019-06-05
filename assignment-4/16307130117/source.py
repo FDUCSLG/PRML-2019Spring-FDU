@@ -144,7 +144,8 @@ class RNN(torch.nn.Module):
     def forward(self,  words, seq_len=None):
         x = self.embed(words)
         r_output, (h_n, h_c) = self.rnn(x, None) 
-        mean = r_output.sum(1)/r_output.shape[1]
+        #mean = r_output.sum(1)/r_output.shape[1]
+        mean = torch.max(r_output,1)[0]
         output = self.output(mean)
         return {Const.OUTPUT: output}
 
