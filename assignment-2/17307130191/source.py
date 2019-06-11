@@ -369,9 +369,9 @@ def Logistic():
 
     #gradient_check(w, b, Train)
     #rate(Train, pred, w, b, Loss1, Loss2)
-    #stochastic(Train, Test, pred, w, b, Loss1, Loss2)
+    stochastic(Train, Test, pred, w, b, Loss1, Loss2)
     #full_batched(Train, Test, pred, w, b, Loss1, Loss2)
-    batched(Train, Test, pred, w, b, Loss1, Loss2, 2)
+    #batched(Train, Test, pred, w, b, Loss1, Loss2, 2)
 
 #Lq()
 #Perceptron()
